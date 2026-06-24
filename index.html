@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Termômetro da Reforma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14282E; --ink-2:#3A4F55; --ink-3:#6B7E83;
+    --paper:#EBEEEC; --surface:#FFFFFF; --line:#D6DEDB; --line-2:#E4EAE7;
+    --teal:#1C5A63; --verde:#4F8A6A; --ambar:#BE9A4C; --vermelho:#B05C46;
+    --panel:#F4F6F4; --panel-2:#FBFBF9; --panel-line:#DBE1DF;
+    --disp:'Bricolage Grotesque',Georgia,serif;
+    --body:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--body);background:var(--paper);color:var(--ink);line-height:1.5;font-size:15px;
+    font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:30px 26px 70px}
+  .disp{font-family:var(--disp)}
+  .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);font-weight:600}
+  .brand[contenteditable]{outline:none;border-bottom:1px dashed transparent;cursor:text}
+  .brand[contenteditable]:hover,.brand[contenteditable]:focus{border-bottom-color:var(--teal)}
+  .head{position:relative;margin-bottom:24px}
+  .topmeta{position:absolute;right:0;top:4px;text-align:right;font-size:10.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-3);line-height:1.9}
+  h1{font-family:var(--disp);font-size:42px;line-height:1.04;margin:7px 0 11px;font-weight:700;letter-spacing:-.01em}
+  .lede{font-size:17px;color:var(--ink-2);max-width:540px}
+  .layout{display:grid;grid-template-columns:1fr 360px;gap:30px;align-items:start}
+  @media(max-width:900px){.layout{grid-template-columns:1fr}.panel{order:-1;position:static!important}}
+  .note{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:15px 17px;
+    font-size:13.5px;color:var(--ink-2);margin-bottom:24px}
+  .note .sample{color:var(--teal);cursor:pointer;text-decoration:underline;font-weight:500}
+  .blocklabel{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:0 0 12px}
+  .ctxwrap{margin-bottom:30px}
+  .ctxrow{display:grid;gap:12px;margin-bottom:12px}
+  .ctxrow.r3{grid-template-columns:1fr 1fr 1fr}
+  .ctxrow.r2{grid-template-columns:1fr 1fr}
+  .ctxrow.r1{grid-template-columns:1fr}
+  @media(max-width:600px){.ctxrow{grid-template-columns:1fr!important}}
+  .ctx .f label{display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px;font-weight:600}
+  .ctx select,.ctx input[type=text]{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);
+    font-family:var(--body);font-size:14px;color:var(--ink)}
+  .ctx select{cursor:pointer}
+  .ctx select:focus,.ctx input[type=text]:focus{outline:2px solid var(--teal);outline-offset:1px}
+  .vec{margin-bottom:28px}
+  .vtag{font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--teal);font-weight:600}
+  .vec h2{font-family:var(--disp);font-size:23px;margin:3px 0 6px;font-weight:600;letter-spacing:-.01em}
+  .vsub{font-size:13.5px;color:var(--ink-2);margin-bottom:15px;max-width:560px}
+  .q{margin-bottom:15px}
+  .q .qt{font-weight:600;margin-bottom:8px;font-size:14.5px}
+  .opt{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:9px;
+    padding:10px 14px;margin-bottom:7px;cursor:pointer;background:var(--surface);transition:.12s}
+  .opt:hover{border-color:#bcc8c4}
+  .opt:focus-within{outline:2px solid var(--teal);outline-offset:1px}
+  .opt.sel{border-color:var(--teal);background:#f0f5f4;box-shadow:inset 0 0 0 1px var(--teal)}
+  .opt input{position:absolute;opacity:0;width:0;height:0}
+  .dot{width:15px;height:15px;border-radius:50%;border:2px solid #b6c0bc;flex:0 0 auto}
+  .opt.sel .dot{border-color:var(--teal);background:radial-gradient(circle,var(--teal) 42%,#fff 46%)}
+  .opt .ol{font-size:14px}
+  .qfield{margin-top:9px}
+  .qfield label{display:block;font-size:11px;color:var(--ink-3);margin-bottom:5px;font-weight:500}
+  .qfield input{width:100%;max-width:340px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;
+    font-family:var(--body);font-size:13.5px;background:var(--surface);color:var(--ink)}
+  .qfield input:focus{outline:2px solid var(--teal);outline-offset:1px}
+  /* panel */
+  .panel{position:sticky;top:16px;background:var(--panel);color:var(--ink);border:1px solid var(--panel-line);border-radius:14px;padding:20px 20px 22px}
+  .prow{display:flex;gap:10px;margin-bottom:6px}
+  .prow .pf{flex:1}
+  .prow label{display:block;font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px;font-weight:600}
+  .prow input{width:100%;background:var(--panel-2);border:1px solid var(--panel-line);border-radius:7px;color:var(--ink);
+    font-family:var(--body);font-size:13px;padding:8px 10px}
+  .prow input:focus{outline:1px solid var(--teal)}
+  .gwrap{text-align:center;margin:8px 0 2px}
+  .gtoplbl{display:flex;justify-content:space-between;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-bottom:2px}
+  .gscore{font-family:var(--disp);font-size:44px;font-weight:700;line-height:1;margin-top:2px}
+  .gscore small{font-size:15px;color:var(--ink-3);font-weight:500}
+  .gband{font-size:12px;letter-spacing:.07em;text-transform:uppercase;font-weight:600;margin-top:3px;color:var(--ink-3)}
+  .gscale{display:flex;justify-content:space-between;font-size:9px;color:var(--ink-3);padding:0 16px;margin-top:-4px}
+  .bars{margin-top:16px;border-top:1px solid var(--panel-line);padding-top:13px}
+  .bar{margin-bottom:10px}
+  .bl{display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px}
+  .bl b{font-weight:500;color:var(--ink-2)}
+  .bl .bv{font-weight:600}
+  .track{height:5px;background:#E3E7E5;border-radius:4px;overflow:hidden}
+  .fill{height:100%;width:0;border-radius:4px;transition:.3s width,.3s background}
+  .locked{margin-top:16px;border-top:1px solid var(--panel-line);padding-top:15px;font-size:12.5px;color:var(--ink-3);text-align:center}
+  /* laudo */
+  .laudo{display:none;margin-top:16px;border-top:1px solid var(--panel-line);padding-top:15px}
+  .laudo.on{display:block}
+  .lsec{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:0 0 10px}
+  .impacts{display:flex;gap:10px}
+  .imp{flex:1;background:var(--panel-2);border:1px solid var(--panel-line);border-radius:11px;padding:14px 12px;text-align:center}
+  .impl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .impv{font-family:var(--disp);font-size:18px;font-weight:700;margin:7px 0 3px;line-height:1.1;color:var(--ink)}
+  .impd{font-size:11px;color:var(--ink-2);line-height:1.3}
+  .fcbox{background:#fff;border:1px solid var(--panel-line);border-radius:11px;padding:13px 14px;margin-top:11px;text-align:center}
+  .fcl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .fcv{font-family:var(--disp);font-size:23px;font-weight:700;color:var(--vermelho);margin:5px 0 4px;line-height:1}
+  .fcn{font-size:11px;color:var(--ink-2);line-height:1.35}
+  .recur{font-size:11px;color:var(--ink-3);margin-top:9px;text-align:center;line-height:1.35}
+  .risknote{font-size:12.5px;color:var(--ink-2);margin:13px 0 2px;text-align:center}
+  .risknote b{font-weight:600}
+  .ctah{font-size:12.5px;color:var(--ink-2);line-height:1.45;margin-bottom:11px;text-align:center}
+  .cta{margin-top:16px}
+  .btn{display:block;width:100%;text-align:center;border:none;border-radius:9px;padding:12px;
+    font-family:var(--body);font-size:13.5px;font-weight:600;cursor:pointer}
+  .btn-primary{background:var(--teal);color:#fff}
+  .btn-ghost{background:transparent;color:var(--teal);border:1px solid var(--panel-line);margin-top:8px}
+  .disc{font-size:10px;color:var(--ink-3);margin-top:12px;font-style:italic;line-height:1.4}
+  .footrow{display:flex;gap:10px;margin-top:18px}
+  .footrow .btn{margin-top:0}
+  .btn-new{background:transparent;color:var(--ink-2);border:1px solid var(--line);font-size:12.5px;padding:9px}
+  /* gate / lead capture */
+  .report-wrap{position:relative}
+  .report{transition:filter .35s ease,opacity .35s ease}
+  .report.blurred{filter:blur(7px);opacity:.5;pointer-events:none;user-select:none}
+  @media(prefers-reduced-motion:reduce){.report{transition:none}}
+  .gate{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:11px;text-align:center;padding:16px}
+  .gate.hidden{display:none}
+  .glock{width:26px;height:26px;color:var(--ink-3)}
+  .gtxt{font-size:13px;color:var(--ink-2);font-weight:600;max-width:230px;line-height:1.4}
+  .modal{position:fixed;inset:0;background:rgba(20,40,46,.55);display:none;align-items:center;justify-content:center;
+    padding:20px;z-index:60}
+  .modal.on{display:flex}
+  .modalcard{background:#fff;border-radius:16px;max-width:400px;width:100%;padding:26px 26px 22px;
+    box-shadow:0 24px 60px rgba(0,0,0,.32);text-align:center}
+  .mlsec{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:700}
+  .modalcard h3{font-family:var(--disp);font-size:21px;font-weight:700;margin:8px 0 8px;color:var(--ink);line-height:1.2}
+  .msub{font-size:13px;color:var(--ink-2);line-height:1.45;margin-bottom:16px}
+  .modalcard input{width:100%;padding:13px 14px;border:1px solid var(--panel-line);border-radius:9px;font-size:15px;
+    font-family:var(--body);text-align:center;color:var(--ink)}
+  .modalcard input:focus{outline:2px solid var(--teal);outline-offset:1px}
+  .merr{color:var(--vermelho);font-size:12px;min-height:17px;margin:6px 0 2px}
+  .mfine{font-size:11px;color:var(--ink-3);margin-top:12px;line-height:1.4}
+  /* report takeover */
+  .reportcard{background:#fff;border-radius:18px;max-width:600px;width:100%;padding:24px 30px 26px;text-align:center;
+    box-shadow:0 30px 70px rgba(0,0,0,.35);max-height:92vh;overflow:auto}
+  .rc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .rc-x{background:none;border:none;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;padding:0 4px}
+  .rc-risk{font-family:var(--disp);font-size:14px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-bottom:16px}
+  .rc-tiles{display:flex;gap:14px;margin-bottom:14px}
+  @media(max-width:520px){.rc-tiles{flex-direction:column}}
+  .rc-tile{flex:1;background:var(--panel);border:1px solid var(--panel-line);border-radius:12px;padding:16px 14px}
+  .rc-v{font-family:var(--disp);font-size:24px;font-weight:700;color:var(--ink);margin:8px 0 3px;line-height:1}
+  .rc-fc{background:#FBF1ED;border:1px solid #E7C7BD;border-radius:12px;padding:15px;margin-bottom:18px}
+  .rc-fcv{font-family:var(--disp);font-size:30px;font-weight:700;color:var(--vermelho);margin-top:4px;line-height:1}
+  .rc-ctah{font-size:14px;color:var(--ink-2);line-height:1.5;max-width:470px;margin:0 auto 16px}
+  .rc-book{font-size:15px;padding:15px;max-width:430px;margin:0 auto}
+  .rc-close{display:block;margin:13px auto 0;background:none;border:none;color:var(--ink-3);font-size:12.5px;text-decoration:underline;cursor:pointer}
+  /* print one-pager */
+  @media print{
+    @page{margin:14mm}
+    body{background:#fff}
+    .col-left,.note,.footrow,.cta,.gscale,.locked{display:none!important}
+    .wrap{padding:0;max-width:none}
+    .layout{display:block}
+    .panel{position:static;background:#fff;color:var(--ink);border:1px solid var(--line);padding:22px}
+    .gtoplbl,.gband,.bl b,.lsec{color:var(--ink-3)}
+    .prow input{background:#fff;border-color:var(--line);color:var(--ink)}
+    .track{background:#e7eae8}
+    .bars,.laudo,.locked{border-top-color:var(--line)}
+    .imp{background:#f3f5f4} .impl{color:var(--ink-3)} .impd{color:var(--ink-2)}
+    .risknote{color:var(--ink-2)} .risknote b{color:var(--ink)}
+    .report{filter:none!important;opacity:1!important} .gate{display:none!important} #cta{display:block!important}
+    .needle line{stroke:var(--ink)!important} .needle circle{fill:var(--ink)!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head col-left">
+    <div class="topmeta">Triagem · 6 vetores<br>Margem &amp; caixa · 2027</div>
+    <div class="eyebrow brand" contenteditable="true" spellcheck="false">Sua Consultoria</div>
+    <h1>Termômetro da Reforma</h1>
+    <p class="lede">Em 15 minutos, um retrato de quanto a Reforma Tributária de 2027 pode pressionar a sua margem e o seu caixa.</p>
+  </div>
+
+  <div class="layout">
+    <div class="col-left">
+      <div class="note">Responda <b>com o empresário</b>, pela percepção dele. Não é preciso abrir planilha. O medidor ao lado se move a cada resposta. Ao final, libere o laudo.
+        <span class="sample" onclick="fillSample()">› preencher exemplo</span></div>
+
+      <div class="blocklabel">Contexto da empresa</div>
+      <div class="ctxwrap ctx">
+        <div class="ctxrow r1">
+          <div class="f"><label>Razão social</label>
+            <input type="text" id="razao" placeholder="Razão social da empresa" oninput="document.getElementById('empresa').value=this.value"></div>
+        </div>
+        <div class="ctxrow r3">
+          <div class="f"><label>Faturamento anual</label>
+            <select id="fat" onchange="recalc()"><option value="">Selecione</option>
+              <option>Até R$ 12M</option><option>R$ 12M a 20M</option><option>R$ 20M a 30M</option>
+              <option>R$ 30M a 45M</option><option>R$ 45M a 60M</option><option>R$ 60M a 90M</option>
+              <option>R$ 90M a 120M</option><option>Acima de R$ 120M</option></select></div>
+          <div class="f"><label>Margem operacional (EBITDA)</label>
+            <select id="mar" onchange="recalc()"><option value="">Selecione</option>
+              <option>Negativa ou zero</option><option>0% a 7,5%</option><option>7,5% a 15%</option>
+              <option>15% a 22,5%</option><option>22,5% a 30%</option><option>Acima de 30%</option></select></div>
+          <div class="f"><label>Regime tributário (2026)</label>
+            <select id="regime" onchange="recalc()"><option value="">Selecione</option>
+              <option>Simples Nacional</option><option>Lucro Presumido</option><option>Lucro Real</option><option>Não sei</option></select></div>
+        </div>
+        <div class="ctxrow r2">
+          <div class="f"><label>Setor predominante</label>
+            <select id="set" onchange="recalc()"><option value="">Selecione</option>
+              <option value="ind">Indústria</option><option value="com">Comércio / distribuição</option>
+              <option value="ser">Serviços</option><option value="mis">Misto</option></select></div>
+          <div class="f"><label>Setor específico ou CNAE predominante</label>
+            <input type="text" id="cnae" placeholder="Ex.: engenharia consultiva, ou 71.12-0/00"></div>
+        </div>
+      </div>
+
+      <div id="vectors"></div>
+    </div>
+
+    <!-- PANEL -->
+    <div class="panel">
+      <div class="prow">
+        <div class="pf"><label>Empresa</label><input id="empresa" placeholder="Nome da empresa"></div>
+        <div class="pf" style="max-width:120px"><label>Data</label><input id="data"></div>
+      </div>
+      <div class="gwrap">
+        <div class="gtoplbl"><span>Medidor de exposição</span><span id="prog">0/17</span></div>
+        <svg viewBox="0 0 300 178" width="100%" style="max-width:250px" aria-hidden="true">
+          <path d="M30 150 A120 120 0 0 1 90 46.08" fill="none" stroke="#4F8A6A" stroke-width="15" stroke-linecap="round"/>
+          <path d="M90 46.08 A120 120 0 0 1 210 46.08" fill="none" stroke="#C7AC68" stroke-width="15" stroke-linecap="round"/>
+          <path d="M210 46.08 A120 120 0 0 1 270 150" fill="none" stroke="#B05C46" stroke-width="15" stroke-linecap="round"/>
+          <g class="needle" id="needle" transform="rotate(-90 150 150)">
+            <line x1="150" y1="150" x2="150" y2="42" stroke="#2A3B40" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="150" cy="150" r="7" fill="#2A3B40"/>
+          </g>
+        </svg>
+        <div class="gscale"><span>BAIXA</span><span>ALTA</span></div>
+        <div class="gscore"><span id="score">0</span><small>/100</small></div>
+        <div class="gband" id="band">Aguardando respostas</div>
+      </div>
+      <div class="bars" id="bars"></div>
+
+      <div class="laudo on" id="laudo">
+        <div class="report-wrap">
+          <div class="report blurred" id="report">
+            <div class="lsec" style="text-align:center">Estimativa de impacto em 2027</div>
+            <div class="impacts">
+              <div class="imp"><div class="impl">Perda permanente na margem</div><div class="impv" id="impMarV">—</div><div class="impd" id="impMarD"></div></div>
+              <div class="imp"><div class="impl">Aumento na necessidade de capital de giro</div><div class="impv" id="impCaiV">—</div><div class="impd" id="impCaiD"></div></div>
+            </div>
+            <div class="fcbox">
+              <div class="fcl">Efeito no caixa livre em 2027</div>
+              <div class="fcv" id="fcv">—</div>
+              <div class="fcn">Pico do ano de transição.</div>
+            </div>
+            <div class="risknote" id="risknote"></div>
+            <div class="cta" id="cta" style="display:none">
+              <div class="ctah">Apresentamos seu relatório completo e o caminho para proteger margem e caixa.</div>
+              <button class="btn btn-primary" onclick="alert('Conectar à agenda / CRM da consultoria.')">Agendar conversa com um especialista</button>
+              <button class="btn btn-ghost" onclick="window.print()">Baixar resumo</button>
+            </div>
+            <div class="disc">Estimativa direcional de triagem, com base na LC 214/2025. A conversa precifica com exatidão e monta o plano.</div>
+          </div>
+          <div class="gate" id="gate">
+            <svg class="glock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+            <div class="gtxt" id="gtxt">Responda para liberar seu relatório</div>
+            <button class="btn btn-primary" id="unlockBtn" style="display:none;width:auto;padding:11px 24px" onclick="openGate()">Liberar meu relatório</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="footrow col-left">
+        <button class="btn btn-new" style="flex:1" onclick="resetAll()">Novo diagnóstico</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="emailModal" onclick="if(event.target===this)closeModal()">
+  <div class="modalcard">
+    <div class="mlsec">Relatório pronto</div>
+    <h3>Para onde enviamos sua estimativa?</h3>
+    <p class="msub">Você recebe o relatório com a perda de margem e a necessidade de caixa da sua empresa, e libera a visualização agora.</p>
+    <input type="email" id="leadEmail" placeholder="seu melhor e-mail" autocomplete="email" onkeydown="if(event.key==='Enter')submitLead()">
+    <div class="merr" id="merr"></div>
+    <button class="btn btn-primary" onclick="submitLead()">Receber e ver o relatório</button>
+    <div class="mfine">Sem spam. Usamos seu e-mail apenas para enviar o relatório e combinar a conversa.</div>
+  </div>
+</div>
+
+<div class="modal" id="reportModal" onclick="if(event.target===this)closeReport()">
+  <div class="reportcard">
+    <div class="rc-head">
+      <div class="mlsec">Seu Termômetro da Reforma</div>
+      <button class="rc-x" onclick="closeReport()" aria-label="Fechar">&times;</button>
+    </div>
+    <div class="rc-risk" id="rcRisk"></div>
+    <div class="rc-tiles">
+      <div class="rc-tile"><div class="impl">Perda permanente na margem</div><div class="rc-v" id="rcMar">—</div><div class="impd" id="rcMarD"></div></div>
+      <div class="rc-tile"><div class="impl">Aumento de capital de giro</div><div class="rc-v" id="rcCai">—</div><div class="impd">uma vez · split payment</div></div>
+    </div>
+    <div class="rc-fc"><div class="fcl">Efeito no caixa livre em 2027</div><div class="rc-fcv" id="rcFc">—</div></div>
+    <div class="rc-ctah">Esta é uma decisão que protege sua margem e seu caixa. Em 30 minutos, nossos especialistas leem a situação real da sua empresa e mostram o plano para 2027.</div>
+    <button class="btn btn-primary rc-book" onclick="bookCall()">Agendar conversa com um especialista</button>
+    <button class="rc-close" onclick="closeReport()">Fechar e ver no painel</button>
+  </div>
+</div>
+
+<script>
+/* ===== CONFIGURAÇÃO (editar no deploy) ===== */
+const CONFIG = {
+  captureEndpoint: "https://zjpeyecjtfqwfxhpebpt.supabase.co/functions/v1/capture-lead",   // Edge Function (Supabase) ao vivo
+  supabaseAnonKey: "",   // chave pública (anon) do Supabase, se a função exigir
+  bookingsUrl: "",       // URL do Zoho Bookings para a conversa
+  // premissas do cálculo (alinhar com o parceiro fiscal)
+  cbsRate: 0.09,         // CBS de referência em 2027 (giro)
+  wcInterest: 0.14,      // juro anual do capital de giro (linha recorrente, uso futuro)
+  bandWidth: 0.30,       // largura da faixa (±30%)
+  maxMarginPP: 6         // teto de pontos de margem em risco
+};
+function track(ev,data){try{
+  window.dataLayer&&window.dataLayer.push(Object.assign({event:'termometro_'+ev},data||{}));
+  window.gtag&&window.gtag('event','termometro_'+ev,data||{});
+}catch(e){}}
+let started=false, reportReadyFired=false;
+/* =========================================== */
+
+const VECTORS=[
+ {tag:"Vetor 01 · Caixa & Split Payment",name:"Caixa & Split Payment",peso:1.4,
+  sub:"O ponto mais sensível. Pela LC 214/2025 (arts. 31–35), o split payment separa o tributo na liquidação da transação, inclusive em vendas parceladas. Acaba o fôlego de usar o imposto como capital de giro.",
+  risco:"Risco de perder o float tributário e precisar de mais capital de giro.",
+  qs:[
+   {id:"prazo",t:"Quanto das suas vendas é a prazo (faturado ou parcelado)?",o:["Quase tudo à vista (até 20%)","Cerca de metade","Maioria a prazo (60% a 80%)","Quase tudo a prazo (acima de 80%)"]},
+   {id:"receb",t:"Qual o prazo médio para receber dos clientes?",o:["Até 30 dias","30 a 60 dias","60 a 90 dias","Acima de 90 dias"]},
+   {id:"folego",t:"Hoje a empresa usa o intervalo entre receber e recolher imposto como fôlego de caixa?",o:["Não, o caixa é folgado","Um pouco","Sim, é um fôlego importante"]},
+   {id:"giro",t:"Como está a necessidade de capital de giro hoje?",o:["Folgada","Equilibrada","Apertada, uso crédito com frequência","Crítica, crédito caro e recorrente"]}
+  ]},
+ {tag:"Vetor 02 · Margem & Poder de Preço",name:"Margem & Poder de Preço",peso:1.3,
+  sub:"Se a carga mudar e você não puder repassar ao preço, o impacto cai direto na margem. Clientes do regime regular aproveitam o crédito; consumidor final e Simples, não.",
+  risco:"Margem comprimida se a carga subir e o preço não puder ser repassado.",
+  qs:[
+   {id:"repasse",t:"No seu mercado, você consegue repassar aumentos de custo para o preço?",o:["Sim, tenho marca ou diferenciação","Em parte, com alguma perda de volume","Pouco, o mercado é sensível a preço","Não, o preço é ditado pela concorrência"]},
+   {id:"clientes",t:"Seus clientes são, na maioria:",o:["Empresas no regime regular (Lucro Real ou Presumido), que aproveitam o crédito cheio","Misto","Consumidor final, ou empresas no Simples, que não aproveitam crédito cheio"]},
+   {id:"carga",t:"Você sabe sua carga tributária efetiva hoje (% sobre o faturamento)?",o:["Sei com precisão","Tenho uma noção","Não sei ao certo"],
+    field:{id:"carga_pct",label:"Se souber, informe o % (real ou estimado):",ph:"Ex.: 14%",showOnOption:[0,1]}}
+  ]},
+ {tag:"Vetor 03 · Créditos & Cadeia",name:"Créditos & Cadeia",peso:1.1,
+  sub:"O novo modelo é de crédito amplo. Insumos e serviços de PJ com nota geram crédito; folha CLT e pró-labore, não. Quem gera e recebe pouco crédito tende a virar o elo caro da cadeia.",
+  risco:"Créditos fracos na cadeia podem encarecer a operação e a sua nota.",
+  qs:[
+   {id:"custos",t:"Na sua estrutura de custos, o que pesa mais?",o:["Mercadorias e insumos com nota fiscal (geram crédito)","Serviços de terceiros PJ com nota (geram crédito, se o prestador for do regime regular)","É misto / equilibrado","Folha CLT e pró-labore (não geram crédito)"]},
+   {id:"forn",t:"Seus principais fornecedores são, em geral:",o:["Empresas no Lucro Real ou Presumido (crédito cheio)","É misto","Muitos no Simples, MEI ou informais (crédito limitado)"]},
+   {id:"inter",t:"Você compra ou importa parcela relevante de fora do seu estado?",o:["Não, quase tudo local","Em parte","Sim, parcela relevante"]}
+  ]},
+ {tag:"Vetor 04 · Setor & Regras Específicas",name:"Setor & Regras Específicas",peso:1.0,
+  sub:"Serviços tendem a sentir mais a não-cumulatividade. Alguns setores têm regime próprio na LC 214/2025 que muda o jogo.",
+  risco:"Setor de serviços e regimes específicos pedem leitura sob medida.",
+  qs:[
+   {id:"regime_esp",t:"Seu setor tem regime específico ou benefício fiscal relevante hoje (saúde, educação, alimentos, transporte, ZFM, incentivo de ICMS)?",o:["Não se aplica, setor padrão","Tem particularidade e já mapeei o efeito","Tem particularidade e ainda não mapeei","Dependo de um incentivo que pode acabar"]}
+  ]},
+ {tag:"Vetor 05 · Regime Tributário",name:"Regime Tributário",peso:0.9,
+  sub:"O melhor enquadramento pode mudar com a Reforma, e a janela para decidir é curta. No Simples, há a opção de recolher IBS/CBS por fora para transferir crédito cheio ao cliente.",
+  risco:"A escolha de regime pode mudar, e a janela de decisão é curta.",
+  qs:[
+   {id:"avaliou",t:"Já avaliou se o regime atual continua sendo o melhor sob a Reforma?",o:["Sim, já avaliei e decidi","Estou avaliando","Ainda não avaliei"]},
+   {id:"limite",t:"Você tem dúvida sobre qual regime tributário será o melhor para a empresa sob a Reforma?",o:["Não, já está claro ou decidido","Tenho alguma dúvida","Sim, é uma decisão em aberto e relevante"]}
+  ]},
+ {tag:"Vetor 06 · Prontidão & Governança",name:"Prontidão & Governança",peso:0.8,
+  sub:"Sem responsável, simulação e contratos ajustados, o impacto chega como surpresa.",
+  risco:"Sem dono, simulação e contratos ajustados, o risco vira surpresa.",
+  qs:[
+   {id:"quem",t:"Quem está cuidando da Reforma na empresa hoje?",o:["Consultoria ou estrutura dedicada","O contador está conduzindo","Ninguém específico, vai dar tempo"]},
+   {id:"simulou",t:"Você já simulou, em números, o impacto na margem e no caixa?",o:["Sim","Parcialmente","Não"]},
+   {id:"contrato",t:"Seus contratos mais longos têm cláusula de repasse ou ajuste tributário?",o:["Sim, ou não tenho contratos longos","Alguns","Não"]},
+   {id:"erp",t:"Seu sistema (ERP/financeiro) já está sendo adequado para CBS, IBS e split payment?",o:["Sim, já adequado e emitindo na fase teste de 2026","Em andamento com o fornecedor","Ainda não começamos","Não sei, ou não uso ERP"],
+    field:{id:"erp_nome",label:"Qual sistema (ERP/financeiro) usa? Ou 'não uso ERP':",ph:"Ex.: TOTVS, SAP, Omie, Sankhya..."}}
+  ]}
+];
+
+const FLAG={
+ prazo:"Vendas concentradas a prazo: o fim do float tributário pesa direto no giro.",
+ receb:"Recebimento acima de 90 dias amplia o descasamento sob o split payment.",
+ folego:"A empresa depende do imposto como fôlego de caixa, e é isso que o split payment encerra.",
+ giro:"Capital de giro já crítico, com crédito caro e recorrente.",
+ repasse:"Sem poder de repasse: o aumento de carga cai sobre a margem, não sobre o cliente.",
+ clientes:"Base voltada a consumidor final ou Simples, que não tomam crédito cheio: pouca defesa de preço.",
+ carga:"A empresa não conhece a própria carga efetiva, base de qualquer simulação.",
+ custos:"Custo dominado por folha CLT e pró-labore, que não geram crédito.",
+ forn:"Muitos fornecedores no Simples ou informais: crédito limitado e cadeia a revisar.",
+ inter:"Operação relevante de fora do estado ou importação, com mudança de origem para destino.",
+ regime_esp:"Depende de incentivo fiscal que pode acabar na transição.",
+ avaliou:"Enquadramento ainda não reavaliado sob a Reforma.",
+ limite:"Decisão de regime em aberto e relevante, com janela curta.",
+ quem:"Ninguém responsável pela Reforma na empresa.",
+ simulou:"Nenhuma simulação em números do impacto na margem e no caixa.",
+ contrato:"Contratos longos sem cláusula de ajuste viram perda de margem em 2027.",
+ erp:"Sistema ainda não preparado para CBS, IBS e split payment."
+};
+const SETOR={ind:"indústria",com:"comércio e distribuição",ser:"serviços",mis:"operação mista"};
+
+const answers={}; let totalQ=0;
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const vc=document.getElementById('vectors');
+VECTORS.forEach((v,vi)=>{
+  totalQ+=v.qs.length;
+  const el=document.createElement('section');el.className='vec';
+  el.innerHTML=`<div class="vtag">${v.tag}</div><h2>${v.name}</h2><p class="vsub">${v.sub}</p>`;
+  v.qs.forEach(q=>{
+    const max=q.o.length-1;
+    const qd=document.createElement('div');qd.className='q';
+    qd.innerHTML=`<div class="qt">${q.t}</div>`;
+    let fieldEl=null;
+    if(q.field){
+      fieldEl=document.createElement('div');fieldEl.className='qfield';
+      fieldEl.innerHTML=`<label>${q.field.label}</label><input type="text" id="${q.field.id}" placeholder="${q.field.ph||''}">`;
+      if(q.field.showOnOption)fieldEl.style.display='none';
+    }
+    q.o.forEach((label,oi)=>{
+      const lab=document.createElement('label');lab.className='opt';lab.tabIndex=0;
+      lab.innerHTML=`<input type="radio" name="${q.id}"><span class="dot"></span><span class="ol">${label}</span>`;
+      const pick=()=>{answers[q.id]={p:oi,max:max,vi:vi};
+        qd.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));
+        lab.classList.add('sel');lab.querySelector('input').checked=true;
+        if(fieldEl&&q.field.showOnOption)fieldEl.style.display=q.field.showOnOption.includes(oi)?'block':'none';
+        recalc();};
+      lab.addEventListener('click',pick);
+      lab.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}});
+      qd.appendChild(lab);
+    });
+    if(fieldEl)qd.appendChild(fieldEl);
+    el.appendChild(qd);
+  });
+  vc.appendChild(el);
+});
+const barsEl=document.getElementById('bars');
+VECTORS.forEach((v,vi)=>{
+  const b=document.createElement('div');b.className='bar';
+  b.innerHTML=`<div class="bl"><b>${v.name}</b><span class="bv" id="bv${vi}">—</span></div>
+    <div class="track"><div class="fill" id="bf${vi}"></div></div>`;
+  barsEl.appendChild(b);
+});
+document.getElementById('data').value=new Date().toLocaleDateString('pt-BR');
+
+function band(s){return s>=67?{c:'var(--vermelho)',l:'Exposição alta'}:s>=34?{c:'var(--ambar)',l:'Exposição moderada'}:{c:'var(--verde)',l:'Baixa exposição'};}
+function vecPct(vi){
+  const v=VECTORS[vi];let pts=0,mx=0,any=false;
+  v.qs.forEach(q=>{const a=answers[q.id];if(a){any=true;pts+=a.p;mx+=a.max;}});
+  return any?Math.round(pts/mx*100):null;
+}
+function recalc(){
+  const vs=VECTORS.map((_,vi)=>vecPct(vi));
+  vs.forEach((s,vi)=>{const bv=document.getElementById('bv'+vi),bf=document.getElementById('bf'+vi);
+    if(s===null){bv.textContent='—';bv.style.color='#7d9298';bf.style.width='0';}
+    else{const b=band(s);bv.textContent=s;bv.style.color=b.c;bf.style.width=s+'%';bf.style.background=b.c;}});
+  document.getElementById('prog').textContent=Object.keys(answers).length+'/'+totalQ;
+  if(!started&&Object.keys(answers).length>0){started=true;track('started',{});}
+  let num=0,wsum=0;vs.forEach((s,vi)=>{if(s!==null){num+=s*VECTORS[vi].peso;wsum+=VECTORS[vi].peso;}});
+  const geral=wsum?Math.round(num/wsum):0;
+  document.getElementById('score').textContent=geral;
+  document.getElementById('needle').setAttribute('transform',`rotate(${1.8*geral-90} 150 150)`);
+  const bandEl=document.getElementById('band');
+  if(Object.keys(answers).length){const b=band(geral);bandEl.textContent=b.l;bandEl.style.color=b.c;}
+  else{bandEl.textContent='Aguardando respostas';bandEl.style.color='#7d9298';}
+  maybeLaudo(vs,geral);
+}
+function ctxReady(){return document.getElementById('fat').value&&document.getElementById('mar').value&&document.getElementById('set').value&&document.getElementById('regime').value;}
+
+function maybeLaudo(vs,geral){
+  const complete=Object.keys(answers).length===totalQ && ctxReady();
+  updateGate(complete);
+  if(!complete)return;
+  // --- estimativa direcional em R$ a partir do contexto e das respostas ---
+  const a=answers;
+  const FATMID=[0,10,16,25,37.5,52.5,75,105,150]; // R$ mi, por índice do select
+  const fat=FATMID[document.getElementById('fat').selectedIndex]||0;
+  const baseSet={ind:1.5,com:2.5,ser:4.0,mis:2.5}[document.getElementById('set').value]||2.5;
+  // pontos de margem em risco (p.p. da receita)
+  let pp=baseSet;
+  if(a.repasse) pp+=[-0.8,0,1.0,1.6][a.repasse.p];
+  if(a.custos)  pp+=[-1.0,-0.2,0.4,1.5][a.custos.p];
+  if(a.forn)    pp+=[-0.3,0.2,0.8][a.forn.p];
+  if(a.clientes)pp+=[-0.4,0,0.6][a.clientes.p];
+  if(a.regime_esp)pp+=[0,0,0.4,1.2][a.regime_esp.p];
+  if(a.contrato)pp+=[0,0.2,0.5][a.contrato.p];
+  const loF=1-CONFIG.bandWidth, hiF=1+CONFIG.bandWidth;
+  pp=Math.max(0.3,Math.min(CONFIG.maxMarginPP,pp));
+  const margMid=fat*pp/100, margLo=margMid*loF, margHi=margMid*hiF;
+  const ppLo=Math.max(1,Math.round(pp*loF)), ppHi=Math.max(ppLo,Math.round(pp*hiF));
+  // capital de giro adicional (degrau único) pelo split payment (CBS de referência 2027)
+  const aprazo=a.prazo?[0.15,0.5,0.7,0.9][a.prazo.p]:0.5;
+  const recM=a.receb?[1,1.5,2.5,3.5][a.receb.p]:1.5;
+  const caixaMid=(fat/12)*CONFIG.cbsRate*aprazo*recM;
+  const cxLo=caixaMid*loF, cxHi=caixaMid*hiF;
+  const rmi=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});
+  document.getElementById('impMarV').textContent=`R$ ${rmi(margLo)}–${rmi(margHi)} mi`;
+  document.getElementById('impMarD').textContent=`por ano · ≈ ${ppLo===ppHi?ppLo:ppLo+' a '+ppHi} pontos`;
+  document.getElementById('impCaiV').textContent=`R$ ${rmi(cxLo)}–${rmi(cxHi)} mi`;
+  document.getElementById('impCaiD').textContent=`uma vez · split payment`;
+  // efeito no caixa livre de 2027 = margem do ano (fluxo) + degrau de giro (estoque)
+  const fcLo=margLo+cxLo, fcHi=margHi+cxHi;
+  document.getElementById('fcv').textContent=`− R$ ${rmi(fcLo)}–${rmi(fcHi)} mi`;
+  // nível de risco geral
+  const lvl=s=>s>=67?{l:'Alto',c:'var(--vermelho)'}:s>=34?{l:'Moderado',c:'var(--ambar)'}:{l:'Baixo',c:'var(--verde)'};
+  const lr=lvl(geral);
+  document.getElementById('risknote').innerHTML=`Risco de o impacto se concretizar: <b style="color:${lr.c}">${lr.l}</b> · ${geral}/100`;
+}
+
+let captured=false, leadEmail='';
+function updateGate(complete){
+  const report=document.getElementById('report');
+  const gate=document.getElementById('gate');
+  const gtxt=document.getElementById('gtxt');
+  const unlockBtn=document.getElementById('unlockBtn');
+  if(captured){
+    report.classList.remove('blurred');
+    gate.classList.add('hidden');
+    document.getElementById('cta').style.display='block';
+    return;
+  }
+  document.getElementById('cta').style.display='none';
+  report.classList.add('blurred');
+  gate.classList.remove('hidden');
+  if(complete){
+    if(!reportReadyFired){reportReadyFired=true;track('report_ready',{});}
+    gtxt.textContent='Seu relatório está pronto.';
+    unlockBtn.style.display='inline-block';
+  }else{
+    unlockBtn.style.display='none';
+    const remaining=totalQ-Object.keys(answers).length;
+    if(remaining>0) gtxt.textContent=`Faltam ${remaining} ${remaining===1?'resposta':'respostas'} para liberar seu relatório.`;
+    else gtxt.textContent='Complete o contexto da empresa para liberar.';
+  }
+}
+function openGate(){const m=document.getElementById('emailModal');m.classList.add('on');setTimeout(()=>document.getElementById('leadEmail').focus(),60);}
+function closeModal(){document.getElementById('emailModal').classList.remove('on');}
+function submitLead(){
+  const v=document.getElementById('leadEmail').value.trim();
+  const err=document.getElementById('merr');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){err.textContent='Informe um e-mail válido.';return;}
+  err.textContent='';leadEmail=v;captured=true;
+  captureLead(v);
+  closeModal();recalc();
+  renderBigReport();openReport();
+}
+function renderBigReport(){
+  const g=parseInt(document.getElementById('score').textContent,10)||0;
+  const lv=g>=67?['Exposição alta','var(--vermelho)']:g>=34?['Exposição moderada','var(--ambar)']:['Baixa exposição','var(--verde)'];
+  const rk=document.getElementById('rcRisk');rk.textContent=`${lv[0]} · ${g}/100`;rk.style.color=lv[1];
+  document.getElementById('rcMar').textContent=document.getElementById('impMarV').textContent;
+  document.getElementById('rcMarD').textContent=document.getElementById('impMarD').textContent;
+  document.getElementById('rcCai').textContent=document.getElementById('impCaiV').textContent;
+  document.getElementById('rcFc').textContent=document.getElementById('fcv').textContent;
+}
+function openReport(){document.getElementById('reportModal').classList.add('on');}
+function closeReport(){document.getElementById('reportModal').classList.remove('on');
+  document.getElementById('laudo').scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'});}
+function bookCall(){
+  track('book_click',{});
+  if(CONFIG.bookingsUrl) window.open(CONFIG.bookingsUrl,'_blank','noopener');
+  else alert('Configure CONFIG.bookingsUrl com a URL do Zoho Bookings.');
+}
+function val(id){const e=document.getElementById(id);return e?e.value:'';}
+function captureLead(email){
+  track('lead_captured',{});
+  if(!CONFIG.captureEndpoint) return; // modo demo, sem backend
+  const payload={email, empresa:val('razao'), cnae:val('cnae'), faturamento:val('fat'),
+    margem:val('mar'), regime:val('regime'), setor:val('set'),
+    score:document.getElementById('score').textContent,
+    margem_risco:document.getElementById('impMarV').textContent,
+    giro_adicional:document.getElementById('impCaiV').textContent,
+    caixa_livre_2027:document.getElementById('fcv').textContent,
+    data:document.getElementById('data').value, origem:'termometro-reforma',
+    ts:new Date().toISOString()};
+  const headers={'Content-Type':'application/json'};
+  if(CONFIG.supabaseAnonKey){headers['Authorization']='Bearer '+CONFIG.supabaseAnonKey;headers['apikey']=CONFIG.supabaseAnonKey;}
+  fetch(CONFIG.captureEndpoint,{method:'POST',headers,body:JSON.stringify(payload)}).catch(()=>{});
+}
+function fillSample(){
+  document.getElementById('razao').value='Empresa Exemplo Ltda';
+  document.getElementById('empresa').value='Empresa Exemplo Ltda';
+  document.getElementById('cnae').value='Engenharia consultiva';
+  document.getElementById('fat').selectedIndex=4;   // R$ 30M a 45M
+  document.getElementById('mar').selectedIndex=2;    // 0% a 7,5%
+  document.getElementById('regime').selectedIndex=2; // Lucro Presumido
+  document.getElementById('set').value='ser';
+  const s={prazo:2,receb:2,folego:2,giro:2,repasse:3,clientes:2,carga:1,custos:3,forn:2,inter:1,regime_esp:2,avaliou:2,limite:2,quem:1,simulou:2,contrato:2,erp:2};
+  const vecs=document.querySelectorAll('.vec');
+  VECTORS.forEach((v,vi)=>{const qs=vecs[vi].querySelectorAll('.q');
+    v.qs.forEach((q,qi)=>{const oi=s[q.id];answers[q.id]={p:oi,max:q.o.length-1,vi:vi};
+      const qd=qs[qi];const opts=qd.querySelectorAll('.opt');
+      opts.forEach(x=>x.classList.remove('sel'));opts[oi].classList.add('sel');opts[oi].querySelector('input').checked=true;
+      if(q.field&&q.field.showOnOption){const fe=qd.querySelector('.qfield');if(fe)fe.style.display=q.field.showOnOption.includes(oi)?'block':'none';}});});
+  recalc();document.getElementById('laudo').scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'});
+}
+function resetAll(){
+  for(const k in answers)delete answers[k];
+  document.querySelectorAll('.opt.sel').forEach(x=>x.classList.remove('sel'));
+  document.querySelectorAll('input[type=radio]').forEach(x=>x.checked=false);
+  document.querySelectorAll('.qfield').forEach(f=>{const i=f.querySelector('input');if(i)i.value='';});
+  VECTORS.forEach((v,vi)=>v.qs.forEach(q=>{if(q.field&&q.field.showOnOption){const fe=document.getElementById(q.field.id);if(fe)fe.parentElement.style.display='none';}}));
+  ['fat','mar','set','regime'].forEach(id=>document.getElementById(id).value='');
+  ['razao','cnae','empresa','carga_pct','erp_nome','leadEmail'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  captured=false;leadEmail='';started=false;reportReadyFired=false;document.getElementById('merr').textContent='';
+  document.getElementById('reportModal').classList.remove('on');
+  recalc();window.scrollTo({top:0,behavior:reduce?'auto':'smooth'});
+}
+recalc();
+</script>
+</body>
+</html>
