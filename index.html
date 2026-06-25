@@ -66,6 +66,14 @@
   .qfield input{width:100%;max-width:340px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;
     font-family:var(--body);font-size:13.5px;background:var(--surface);color:var(--ink)}
   .qfield input:focus{outline:2px solid var(--teal);outline-offset:1px}
+  .alloc{margin-top:6px}
+  .allocrow{display:flex;align-items:center;gap:12px;margin-bottom:11px}
+  .allocrow .al{flex:1;font-size:13px;color:var(--ink)}
+  .allocrow input[type=range]{flex:0 0 120px;accent-color:var(--teal)}
+  .allocrow .av{width:44px;text-align:right;font-weight:600;font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink)}
+  .alloctotal{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink-3);margin-top:4px;padding-top:9px;border-top:1px solid var(--line)}
+  .alloctotal b{font-size:14px}
+  .allochint{font-size:11.5px;color:var(--ink-3);font-style:italic;margin-top:7px}
   /* panel */
   .panel{position:sticky;top:16px;background:var(--panel);color:var(--ink);border:1px solid var(--panel-line);border-radius:14px;padding:20px 20px 22px}
   .prow{display:flex;gap:10px;margin-bottom:6px}
@@ -152,6 +160,7 @@
   .rc-ctah{font-size:14px;color:var(--ink-2);line-height:1.5;max-width:470px;margin:0 auto 16px}
   .rc-book{font-size:15px;padding:15px;max-width:430px;margin:0 auto}
   .rc-close{display:block;margin:13px auto 0;background:none;border:none;color:var(--ink-3);font-size:12.5px;text-decoration:underline;cursor:pointer}
+  .rc-fine{font-size:11px;color:var(--ink-3);text-align:center;margin-top:8px}
   /* print one-pager */
   @media print{
     @page{margin:14mm}
@@ -175,15 +184,14 @@
 <div class="wrap">
   <div class="head col-left">
     <div class="topmeta">Triagem · 6 vetores<br>Margem &amp; caixa · 2027</div>
-    <div class="eyebrow brand" contenteditable="true" spellcheck="false">Sua Consultoria</div>
+    <div class="eyebrow brand" contenteditable="true" spellcheck="false">EQVALOR Tributos</div>
     <h1>Termômetro da Reforma</h1>
-    <p class="lede">Em 15 minutos, um retrato de quanto a Reforma Tributária de 2027 pode pressionar a sua margem e o seu caixa.</p>
+    <p class="lede">Em 15 minutos, veja quanto a Reforma Tributária de 2027 pode pressionar a sua margem e o seu caixa, e o quão preparado você está.</p>
   </div>
 
   <div class="layout">
     <div class="col-left">
-      <div class="note">Responda <b>com o empresário</b>, pela percepção dele. Não é preciso abrir planilha. O medidor ao lado se move a cada resposta. Ao final, libere o laudo.
-        <span class="sample" onclick="fillSample()">› preencher exemplo</span></div>
+      <div class="note">Responda sobre a sua empresa. Não é preciso abrir planilha. O medidor ao lado se move a cada resposta. Ao final, libere o laudo.</div>
 
       <div class="blocklabel">Contexto da empresa</div>
       <div class="ctxwrap ctx">
@@ -192,7 +200,7 @@
             <input type="text" id="razao" placeholder="Razão social da empresa" oninput="document.getElementById('empresa').value=this.value"></div>
         </div>
         <div class="ctxrow r3">
-          <div class="f"><label>Faturamento anual</label>
+          <div class="f"><label>Faturamento anual consolidado</label>
             <select id="fat" onchange="recalc()"><option value="">Selecione</option>
               <option>Até R$ 12M</option><option>R$ 12M a 20M</option><option>R$ 20M a 30M</option>
               <option>R$ 30M a 45M</option><option>R$ 45M a 60M</option><option>R$ 60M a 90M</option>
@@ -252,12 +260,13 @@
             <div class="fcbox">
               <div class="fcl">Efeito no caixa livre em 2027</div>
               <div class="fcv" id="fcv">—</div>
-              <div class="fcn">Pico do ano de transição.</div>
+              <div class="fcn">O ano em que a perda de margem e o degrau de giro batem juntos.</div>
             </div>
             <div class="risknote" id="risknote"></div>
             <div class="cta" id="cta" style="display:none">
-              <div class="ctah">Apresentamos seu relatório completo e o caminho para proteger margem e caixa.</div>
-              <button class="btn btn-primary" onclick="alert('Conectar à agenda / CRM da consultoria.')">Agendar conversa com um especialista</button>
+              <div class="ctah">O retrato é uma estimativa rápida. Na conversa, um especialista mede o impacto real e monta o plano para margem e caixa até 2027.</div>
+              <button class="btn btn-primary" onclick="bookCall()">Agendar conversa com um especialista</button>
+              <div class="rc-fine">30 minutos, sem compromisso.</div>
               <button class="btn btn-ghost" onclick="window.print()">Baixar resumo</button>
             </div>
             <div class="disc">Estimativa direcional de triagem, com base na LC 214/2025. A conversa precifica com exatidão e monta o plano.</div>
@@ -279,13 +288,13 @@
 
 <div class="modal" id="emailModal" onclick="if(event.target===this)closeModal()">
   <div class="modalcard">
-    <div class="mlsec">Relatório pronto</div>
-    <h3>Para onde enviamos sua estimativa?</h3>
-    <p class="msub">Você recebe o relatório com a perda de margem e a necessidade de caixa da sua empresa, e libera a visualização agora.</p>
+    <div class="mlsec">Seu resultado</div>
+    <h3>Veja o impacto da Reforma nos seus números.</h3>
+    <p class="msub">Informe seu e-mail para liberar o resultado completo agora.</p>
     <input type="email" id="leadEmail" placeholder="seu melhor e-mail" autocomplete="email" onkeydown="if(event.key==='Enter')submitLead()">
     <div class="merr" id="merr"></div>
-    <button class="btn btn-primary" onclick="submitLead()">Receber e ver o relatório</button>
-    <div class="mfine">Sem spam. Usamos seu e-mail apenas para enviar o relatório e combinar a conversa.</div>
+    <button class="btn btn-primary" onclick="submitLead()">Liberar meu resultado</button>
+    <div class="mfine">Sem spam. Usamos seu e-mail apenas para falar com você sobre o seu resultado.</div>
   </div>
 </div>
 
@@ -298,11 +307,12 @@
     <div class="rc-risk" id="rcRisk"></div>
     <div class="rc-tiles">
       <div class="rc-tile"><div class="impl">Perda permanente na margem</div><div class="rc-v" id="rcMar">—</div><div class="impd" id="rcMarD"></div></div>
-      <div class="rc-tile"><div class="impl">Aumento de capital de giro</div><div class="rc-v" id="rcCai">—</div><div class="impd">uma vez · split payment</div></div>
+      <div class="rc-tile"><div class="impl">Aumento na necessidade de capital de giro</div><div class="rc-v" id="rcCai">—</div><div class="impd">uma vez · split payment</div></div>
     </div>
     <div class="rc-fc"><div class="fcl">Efeito no caixa livre em 2027</div><div class="rc-fcv" id="rcFc">—</div></div>
-    <div class="rc-ctah">Esta é uma decisão que protege sua margem e seu caixa. Em 30 minutos, nossos especialistas leem a situação real da sua empresa e mostram o plano para 2027.</div>
+    <div class="rc-ctah">O retrato acima é uma estimativa rápida. Em 30 minutos, um especialista mede o impacto real na sua margem e no seu caixa, e monta com você o plano para proteger os dois até 2027.</div>
     <button class="btn btn-primary rc-book" onclick="bookCall()">Agendar conversa com um especialista</button>
+    <div class="rc-fine">30 minutos, sem compromisso.</div>
     <button class="rc-close" onclick="closeReport()">Fechar e ver no painel</button>
   </div>
 </div>
@@ -332,7 +342,7 @@ const VECTORS=[
   risco:"Risco de perder o float tributário e precisar de mais capital de giro.",
   qs:[
    {id:"prazo",t:"Quanto das suas vendas é a prazo (faturado ou parcelado)?",o:["Quase tudo à vista (até 20%)","Cerca de metade","Maioria a prazo (60% a 80%)","Quase tudo a prazo (acima de 80%)"]},
-   {id:"receb",t:"Qual o prazo médio para receber dos clientes?",o:["Até 30 dias","30 a 60 dias","60 a 90 dias","Acima de 90 dias"]},
+   {id:"receb",t:"Qual o prazo médio para receber dos clientes?",o:["Até 30 dias","30 a 60 dias","60 a 90 dias","Acima de 90 dias",["Não sei",2]]},
    {id:"folego",t:"Hoje a empresa usa o intervalo entre receber e recolher imposto como fôlego de caixa?",o:["Não, o caixa é folgado","Um pouco","Sim, é um fôlego importante"]},
    {id:"giro",t:"Como está a necessidade de capital de giro hoje?",o:["Folgada","Equilibrada","Apertada, uso crédito com frequência","Crítica, crédito caro e recorrente"]}
   ]},
@@ -346,11 +356,15 @@ const VECTORS=[
     field:{id:"carga_pct",label:"Se souber, informe o % (real ou estimado):",ph:"Ex.: 14%",showOnOption:[0,1]}}
   ]},
  {tag:"Vetor 03 · Créditos & Cadeia",name:"Créditos & Cadeia",peso:1.1,
-  sub:"O novo modelo é de crédito amplo. Insumos e serviços de PJ com nota geram crédito; folha CLT e pró-labore, não. Quem gera e recebe pouco crédito tende a virar o elo caro da cadeia.",
+  sub:"O novo modelo é de crédito amplo. Compra com nota de fornecedor do regime regular gera crédito; folha, pró-labore e compra sem nota, não. A divisão do seu custo entre esses grupos define a sua posição de crédito.",
   risco:"Créditos fracos na cadeia podem encarecer a operação e a sua nota.",
   qs:[
-   {id:"custos",t:"Na sua estrutura de custos, o que pesa mais?",o:["Mercadorias e insumos com nota fiscal (geram crédito)","Serviços de terceiros PJ com nota (geram crédito, se o prestador for do regime regular)","É misto / equilibrado","Folha CLT e pró-labore (não geram crédito)"]},
-   {id:"forn",t:"Seus principais fornecedores são, em geral:",o:["Empresas no Lucro Real ou Presumido (crédito cheio)","É misto","Muitos no Simples, MEI ou informais (crédito limitado)"]},
+   {id:"custos",t:"Distribua 100% do seu custo entre estes grupos:",alloc:[
+     {id:"folha",l:"Folha CLT e pró-labore",credit:0},
+     {id:"pj",l:"Serviços de PJ com nota, do regime regular",credit:1},
+     {id:"ins",l:"Mercadorias e insumos com nota",credit:1},
+     {id:"sem",l:"Compras sem nota, no Simples ou informal",credit:0}
+   ]},
    {id:"inter",t:"Você compra ou importa parcela relevante de fora do seu estado?",o:["Não, quase tudo local","Em parte","Sim, parcela relevante"]}
   ]},
  {tag:"Vetor 04 · Setor & Regras Específicas",name:"Setor & Regras Específicas",peso:1.0,
@@ -360,11 +374,11 @@ const VECTORS=[
    {id:"regime_esp",t:"Seu setor tem regime específico ou benefício fiscal relevante hoje (saúde, educação, alimentos, transporte, ZFM, incentivo de ICMS)?",o:["Não se aplica, setor padrão","Tem particularidade e já mapeei o efeito","Tem particularidade e ainda não mapeei","Dependo de um incentivo que pode acabar"]}
   ]},
  {tag:"Vetor 05 · Regime Tributário",name:"Regime Tributário",peso:0.9,
-  sub:"O melhor enquadramento pode mudar com a Reforma, e a janela para decidir é curta. No Simples, há a opção de recolher IBS/CBS por fora para transferir crédito cheio ao cliente.",
-  risco:"A escolha de regime pode mudar, e a janela de decisão é curta.",
+  sub:"Para o mid-market, a decisão central é entre Lucro Presumido e Lucro Real. E a estrutura de vários CNPJs no Simples, comum no comércio e nos serviços, também pode precisar de revisão. O melhor enquadramento pode mudar, e a janela para decidir é curta.",
+  risco:"A escolha de regime e a estrutura societária podem mudar, e a janela de decisão é curta.",
   qs:[
-   {id:"avaliou",t:"Já avaliou se o regime atual continua sendo o melhor sob a Reforma?",o:["Sim, já avaliei e decidi","Estou avaliando","Ainda não avaliei"]},
-   {id:"limite",t:"Você tem dúvida sobre qual regime tributário será o melhor para a empresa sob a Reforma?",o:["Não, já está claro ou decidido","Tenho alguma dúvida","Sim, é uma decisão em aberto e relevante"]}
+   {id:"avaliou",t:"Já avaliou e decidiu qual regime, Lucro Presumido ou Real, será o melhor para a empresa sob a Reforma?",o:["Sim, já avaliei e decidi","Estou avaliando","Ainda não avaliei"]},
+   {id:"estrutura",t:"A empresa opera com mais de um CNPJ relacionado para manter cada um no Simples?",o:["Não, um CNPJ só, ou grupo sem essa finalidade",["Sim, e já avaliamos o efeito da Reforma nessa estrutura",2],["Sim, e ainda não avaliamos",2]]}
   ]},
  {tag:"Vetor 06 · Prontidão & Governança",name:"Prontidão & Governança",peso:0.8,
   sub:"Sem responsável, simulação e contratos ajustados, o impacto chega como surpresa.",
@@ -408,19 +422,54 @@ VECTORS.forEach((v,vi)=>{
   const el=document.createElement('section');el.className='vec';
   el.innerHTML=`<div class="vtag">${v.tag}</div><h2>${v.name}</h2><p class="vsub">${v.sub}</p>`;
   v.qs.forEach(q=>{
-    const max=q.o.length-1;
     const qd=document.createElement('div');qd.className='q';
     qd.innerHTML=`<div class="qt">${q.t}</div>`;
+    if(q.alloc){
+      const wrap=document.createElement('div');wrap.className='alloc';
+      const vals={};q.alloc.forEach(c=>vals[c.id]=0);
+      const updateAlloc=()=>{
+        const total=q.alloc.reduce((s,c)=>s+vals[c.id],0);
+        const at=wrap.querySelector('.atot'),hint=wrap.querySelector('.allochint');
+        if(total===100){at.textContent='100% distribuído';at.style.color='var(--verde)';
+          hint.textContent='Para aumentar um grupo, reduza outro antes.';hint.style.display='block';}
+        else{at.textContent='Restante a distribuir: '+(100-total)+'%';at.style.color='var(--ink-3)';hint.style.display='none';}
+        if(total===100){const credit=q.alloc.reduce((s,c)=>s+(c.credit?vals[c.id]:0),0);
+          answers[q.id]={p:Math.round((100-credit)/100*3),max:3,vi:vi,alloc:Object.assign({},vals),total:100};}
+        else{delete answers[q.id];}
+        recalc();
+      };
+      q.alloc.forEach(c=>{
+        const row=document.createElement('div');row.className='allocrow';
+        row.innerHTML=`<span class="al">${c.l}</span><input type="range" min="0" max="100" step="5" value="0" aria-label="${c.l}"><span class="av">0%</span>`;
+        const range=row.querySelector('input'),av=row.querySelector('.av');
+        range.addEventListener('input',()=>{
+          const others=q.alloc.reduce((s,k)=>s+(k.id===c.id?0:vals[k.id]),0);
+          let v=+range.value;if(v>100-others){v=100-others;range.value=v;}
+          vals[c.id]=v;av.textContent=v+'%';updateAlloc();
+        });
+        wrap.appendChild(row);
+      });
+      const tot=document.createElement('div');tot.className='alloctotal';
+      tot.innerHTML=`<b class="atot">Restante a distribuir: 100%</b>`;
+      wrap.appendChild(tot);
+      const hint=document.createElement('div');hint.className='allochint';hint.style.display='none';
+      wrap.appendChild(hint);
+      qd.appendChild(wrap);el.appendChild(qd);return;
+    }
+    const optLabel=o=>Array.isArray(o)?o[0]:o;
+    const optPts=(o,i)=>Array.isArray(o)?o[1]:i;
+    const maxPts=Math.max.apply(null,q.o.map((o,i)=>optPts(o,i)));
     let fieldEl=null;
     if(q.field){
       fieldEl=document.createElement('div');fieldEl.className='qfield';
       fieldEl.innerHTML=`<label>${q.field.label}</label><input type="text" id="${q.field.id}" placeholder="${q.field.ph||''}">`;
       if(q.field.showOnOption)fieldEl.style.display='none';
     }
-    q.o.forEach((label,oi)=>{
+    q.o.forEach((o,oi)=>{
+      const label=optLabel(o), pts=optPts(o,oi);
       const lab=document.createElement('label');lab.className='opt';lab.tabIndex=0;
       lab.innerHTML=`<input type="radio" name="${q.id}"><span class="dot"></span><span class="ol">${label}</span>`;
-      const pick=()=>{answers[q.id]={p:oi,max:max,vi:vi};
+      const pick=()=>{answers[q.id]={p:pts,oi:oi,lbl:label,max:maxPts,vi:vi};
         qd.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));
         lab.classList.add('sel');lab.querySelector('input').checked=true;
         if(fieldEl&&q.field.showOnOption)fieldEl.style.display=q.field.showOnOption.includes(oi)?'block':'none';
@@ -478,19 +527,19 @@ function maybeLaudo(vs,geral){
   const baseSet={ind:1.5,com:2.5,ser:4.0,mis:2.5}[document.getElementById('set').value]||2.5;
   // pontos de margem em risco (p.p. da receita)
   let pp=baseSet;
-  if(a.repasse) pp+=[-0.8,0,1.0,1.6][a.repasse.p];
-  if(a.custos)  pp+=[-1.0,-0.2,0.4,1.5][a.custos.p];
-  if(a.forn)    pp+=[-0.3,0.2,0.8][a.forn.p];
-  if(a.clientes)pp+=[-0.4,0,0.6][a.clientes.p];
-  if(a.regime_esp)pp+=[0,0,0.4,1.2][a.regime_esp.p];
-  if(a.contrato)pp+=[0,0.2,0.5][a.contrato.p];
+  if(a.repasse) pp+=[-0.8,0,1.0,1.6][a.repasse.oi];
+  if(a.custos&&a.custos.total){const L=a.custos.alloc,T=a.custos.total;
+    pp+=(L.folha/T)*1.6 + (L.sem/T)*1.3 - ((L.pj+L.ins)/T)*1.3;}
+  if(a.clientes)pp+=[-0.4,0,0.6][a.clientes.oi];
+  if(a.regime_esp)pp+=[0,0,0.4,1.2][a.regime_esp.oi];
+  if(a.contrato)pp+=[0,0.2,0.5][a.contrato.oi];
   const loF=1-CONFIG.bandWidth, hiF=1+CONFIG.bandWidth;
   pp=Math.max(0.3,Math.min(CONFIG.maxMarginPP,pp));
   const margMid=fat*pp/100, margLo=margMid*loF, margHi=margMid*hiF;
   const ppLo=Math.max(1,Math.round(pp*loF)), ppHi=Math.max(ppLo,Math.round(pp*hiF));
   // capital de giro adicional (degrau único) pelo split payment (CBS de referência 2027)
-  const aprazo=a.prazo?[0.15,0.5,0.7,0.9][a.prazo.p]:0.5;
-  const recM=a.receb?[1,1.5,2.5,3.5][a.receb.p]:1.5;
+  const aprazo=a.prazo?[0.15,0.5,0.7,0.9][a.prazo.oi]:0.5;
+  const recM=a.receb?(a.receb.oi<4?[1,1.5,2.5,3.5][a.receb.oi]:1.8):1.5;
   const caixaMid=(fat/12)*CONFIG.cbsRate*aprazo*recM;
   const cxLo=caixaMid*loF, cxHi=caixaMid*hiF;
   const rmi=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});
@@ -576,23 +625,6 @@ function captureLead(email){
   const headers={'Content-Type':'application/json'};
   if(CONFIG.supabaseAnonKey){headers['Authorization']='Bearer '+CONFIG.supabaseAnonKey;headers['apikey']=CONFIG.supabaseAnonKey;}
   fetch(CONFIG.captureEndpoint,{method:'POST',headers,body:JSON.stringify(payload)}).catch(()=>{});
-}
-function fillSample(){
-  document.getElementById('razao').value='Empresa Exemplo Ltda';
-  document.getElementById('empresa').value='Empresa Exemplo Ltda';
-  document.getElementById('cnae').value='Engenharia consultiva';
-  document.getElementById('fat').selectedIndex=4;   // R$ 30M a 45M
-  document.getElementById('mar').selectedIndex=2;    // 0% a 7,5%
-  document.getElementById('regime').selectedIndex=2; // Lucro Presumido
-  document.getElementById('set').value='ser';
-  const s={prazo:2,receb:2,folego:2,giro:2,repasse:3,clientes:2,carga:1,custos:3,forn:2,inter:1,regime_esp:2,avaliou:2,limite:2,quem:1,simulou:2,contrato:2,erp:2};
-  const vecs=document.querySelectorAll('.vec');
-  VECTORS.forEach((v,vi)=>{const qs=vecs[vi].querySelectorAll('.q');
-    v.qs.forEach((q,qi)=>{const oi=s[q.id];answers[q.id]={p:oi,max:q.o.length-1,vi:vi};
-      const qd=qs[qi];const opts=qd.querySelectorAll('.opt');
-      opts.forEach(x=>x.classList.remove('sel'));opts[oi].classList.add('sel');opts[oi].querySelector('input').checked=true;
-      if(q.field&&q.field.showOnOption){const fe=qd.querySelector('.qfield');if(fe)fe.style.display=q.field.showOnOption.includes(oi)?'block':'none';}});});
-  recalc();document.getElementById('laudo').scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'});
 }
 function resetAll(){
   for(const k in answers)delete answers[k];
