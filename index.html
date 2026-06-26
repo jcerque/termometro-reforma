@@ -337,7 +337,7 @@
           <div class="rc-cell" data-x="2" data-y="0" style="background:rgba(190,154,76,.18)"></div>
         </div>
         <div class="rc-grid"><div></div><div class="rc-cl">Baixo</div><div class="rc-cl">Moderado</div><div class="rc-cl">Alto</div></div>
-        <div class="rc-xaxis">Impacto na margem e no caixa</div>
+        <div class="rc-xaxis">Risco de impacto na margem e no caixa</div>
       </div>
     </div>
     <div class="rc-zone" id="rcZone"></div>
@@ -667,12 +667,23 @@ function val(id){const e=document.getElementById(id);return e?e.value:'';}
 function captureLead(email){
   track('lead_captured',{});
   if(!CONFIG.captureEndpoint) return; // modo demo, sem backend
+  // respostas completas (cada pergunta -> rótulo escolhido; custos -> alocação)
+  const resp={};
+  Object.keys(answers).forEach(k=>{const a=answers[k]; resp[k]=a.alloc?{alloc:a.alloc,total:a.total}:a.lbl;});
+  const vbar=i=>{const e=document.getElementById('bv'+i);return e?parseInt(e.textContent,10)||0:0;};
+  const impacto=Math.round((vbar(0)*1.4+vbar(1)*1.3+vbar(2)*1.1+vbar(3)*1.0)/4.8);
+  const vuln=Math.round((vbar(4)*0.9+vbar(5)*0.8)/1.7);
+  const geral=parseInt(document.getElementById('score').textContent,10)||0;
+  const cx=impacto>=67?2:impacto>=34?1:0, cy=vuln>=67?2:vuln>=34?1:0, rr=cx+cy;
+  const zona=rr>=3?'critica':rr===2?'atencao':'controle';
   const payload={email, empresa:val('razao'), cnae:val('cnae'), faturamento:val('fat'),
     margem:val('mar'), regime:val('regime'), setor:val('set'),
-    score:document.getElementById('score').textContent,
+    score:geral, geral, impacto, vulnerabilidade:vuln, zona,
+    carga_pct:val('carga_pct'), erp_nome:val('erp_nome'),
     margem_risco:document.getElementById('impMarV').textContent,
     giro_adicional:document.getElementById('impCaiV').textContent,
     caixa_livre_2027:document.getElementById('fcv').textContent,
+    respostas:resp,
     data:document.getElementById('data').value, origem:'termometro-reforma',
     ts:new Date().toISOString()};
   const headers={'Content-Type':'application/json'};
