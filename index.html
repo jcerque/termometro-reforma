@@ -678,7 +678,9 @@ function captureLead(email){
   const geral=parseInt(document.getElementById('score').textContent,10)||0;
   const cx=impacto>=67?2:impacto>=34?1:0, cy=vuln>=67?2:vuln>=34?1:0, rr=cx+cy;
   const zona=rr>=3?'critica':rr===2?'atencao':'controle';
-  const payload={email, empresa:val('razao'), cnae:val('cnae'), faturamento:val('fat'),
+  const aq=(()=>{const p=new URLSearchParams(location.search);const ua=navigator.userAgent||'';
+    return {referrer:document.referrer||'',utm_source:p.get('utm_source')||'',utm_medium:p.get('utm_medium')||'',utm_campaign:p.get('utm_campaign')||'',utm_term:p.get('utm_term')||'',utm_content:p.get('utm_content')||'',landing_url:location.href,device:/Mobi|Android|iPhone|iPad/i.test(ua)?'mobile':'desktop',user_agent:ua};})();
+  const payload={email, ...aq, empresa:val('razao'), cnae:val('cnae'), faturamento:val('fat'),
     margem:val('mar'), regime:val('regime'), setor:val('set'),
     score:geral, geral, impacto, vulnerabilidade:vuln, zona,
     carga_pct:val('carga_pct'), erp_nome:val('erp_nome'),
