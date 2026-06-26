@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Termômetro da Reforma</title>
+<style>
+  :root{--ink:#14282E;--ink-2:#3A4F55;--ink-3:#6B7E83;--paper:#EBEEEC;--surface:#fff;--line:#DBE1DF;
+    --teal:#1C5A63;--verde:#4F8A6A;--ambar:#BE9A4C;--vermelho:#B05C46;
+    --fsans:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--fsans);background:var(--paper);color:var(--ink);font-size:14px;line-height:1.5}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 60px}
+  h1{font-size:22px;font-weight:700;margin-bottom:2px}
+  .sub{color:var(--ink-3);font-size:13px;margin-bottom:22px}
+  .login{max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px;margin-top:30px}
+  .login label{display:block;font-size:12px;color:var(--ink-3);margin-bottom:6px;font-weight:600}
+  input[type=password],input[type=search]{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:var(--fsans);color:var(--ink)}
+  .btn{border:none;border-radius:8px;padding:11px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--fsans)}
+  .btn-primary{background:var(--teal);color:#fff}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink-2)}
+  .err{color:var(--vermelho);font-size:13px;margin-top:10px;min-height:18px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:6px 0 22px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .card .cl{font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+  .card .cv{font-size:26px;font-weight:700;margin-top:4px}
+  .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+  .toolbar input{max-width:280px}
+  table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{text-align:left;padding:9px 12px;font-size:13px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#F4F6F4;color:var(--ink-3);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;cursor:pointer}
+  tr.lead{cursor:pointer}
+  tr.lead:hover{background:#F4F6F4}
+  .zona{font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;white-space:nowrap}
+  .z-critica{background:rgba(176,92,70,.16);color:var(--vermelho)}
+  .z-atencao{background:rgba(190,154,76,.2);color:#8a6d28}
+  .z-controle{background:rgba(79,138,106,.16);color:var(--verde)}
+  .detail{background:#FAFBFA}
+  .detail pre{font-size:12px;white-space:pre-wrap;word-break:break-word;background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px;margin-top:8px;font-family:ui-monospace,Menlo,monospace}
+  .kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px 18px;font-size:12.5px}
+  .kv span{color:var(--ink-3)}
+  .muted{color:var(--ink-3)}
+
+  /* navegação por abas */
+  .tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:22px}
+  .tab{background:transparent;border:none;border-bottom:2px solid transparent;padding:10px 14px;font-size:14px;font-weight:600;color:var(--ink-3);cursor:pointer;font-family:var(--fsans);margin-bottom:-1px}
+  .tab.active{color:var(--teal);border-bottom-color:var(--teal)}
+  /* dashboard inscritos */
+  .chartgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+  .chartcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+  .chartcard.full{grid-column:1/-1}
+  .chartcard h4{font-size:13px;font-weight:600;margin-bottom:12px;color:var(--ink)}
+  .chartcard canvas{max-height:280px}
+  .icp{font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;white-space:nowrap}
+  .icp-Alta{background:rgba(79,138,106,.16);color:var(--verde)}
+  .icp-Media{background:rgba(190,154,76,.2);color:#8a6d28}
+  .icp-Baixa{background:rgba(107,126,131,.16);color:var(--ink-3)}
+  .note{font-size:11.5px;color:var(--ink-3);margin-top:8px}
+  @media(max-width:820px){.chartgrid{grid-template-columns:1fr}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js">
+/* ===== Inscritos da newsletter (dados estáticos) ===== */
+const INSC=[{"nome": "Jason Baumann", "funcao": "Vendas & Comercial", "sen": "Gerente/Coord", "setor": "Consultoria/Educação", "grau": "1º", "icp": "Média"}, {"nome": "Rubens Tavares", "funcao": "Tributário & Contábil", "sen": "Sócio/Fundador", "setor": "Consultoria Tributária", "grau": "1º", "icp": "Alta"}, {"nome": "Claudio Cesar Braulio Carneiro", "funcao": "Operações & Supply Chain", "sen": "Gerente/Coord", "setor": "Telecom/Tech", "grau": "1º", "icp": "Média"}, {"nome": "Cindy Evelin", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "SaaS/Fintech", "grau": "1º", "icp": "Baixa"}, {"nome": "Carlos Reimer", "funcao": "Operações & Supply Chain", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Marçal Junqueira", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Middle Market", "grau": "1º", "icp": "Alta"}, {"nome": "Tiago Arduim", "funcao": "Operações & Supply Chain", "sen": "Gerente/Coord", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Wagner Rodrigues", "funcao": "CEO/GM & Conselho", "sen": "Diretor/VP", "setor": "Automotivo", "grau": "1º", "icp": "Média"}, {"nome": "Amaury Martins", "funcao": "Tributário & Contábil", "sen": "Especialista/Analista", "setor": "Contabilidade", "grau": "1º", "icp": "Alta"}, {"nome": "João Luiz Carvalho", "funcao": "CEO/GM & Conselho", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Leandro Leonardo Libardi", "funcao": "RH & Pessoas", "sen": "Gerente/Coord", "setor": "Consultoria", "grau": "1º", "icp": "Baixa"}, {"nome": "Luis Carlos Araújo", "funcao": "Finanças & Controladoria", "sen": "Diretor/VP", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Saulo Batista", "funcao": "Operações & Supply Chain", "sen": "Especialista/Analista", "setor": "Farma", "grau": "1º", "icp": "Média"}, {"nome": "Roberto Dardis", "funcao": "Investidores & Capital", "sen": "Diretor/VP", "setor": "Finanças/Economia", "grau": "1º", "icp": "Média"}, {"nome": "Guilherme Stefani Carlini", "funcao": "Operações & Supply Chain", "sen": "C-Level/Board", "setor": "Bancos/Imobiliário", "grau": "1º", "icp": "Média"}, {"nome": "Alex Almeida", "funcao": "TI/Tecnologia & IA", "sen": "Sócio/Fundador", "setor": "Tech", "grau": "1º", "icp": "Baixa"}, {"nome": "Janos Denes Olivas Hunkar", "funcao": "Operações & Supply Chain", "sen": "Gerente/Coord", "setor": "Supply Chain", "grau": "1º", "icp": "Média"}, {"nome": "Geraldo Barbosa", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "BPO/Serviços", "grau": "1º", "icp": "Média"}, {"nome": "Paulo Taro Kuchiki", "funcao": "TI/Tecnologia & IA", "sen": "Especialista/Analista", "setor": "Telecom", "grau": "1º", "icp": "Baixa"}, {"nome": "Marcos A. de Lira", "funcao": "Consultoria & Estratégia", "sen": "Especialista/Analista", "setor": "Multissetorial", "grau": "1º", "icp": "Baixa"}, {"nome": "Mario Sossai", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Energia", "grau": "1º", "icp": "Alta"}, {"nome": "Claudia Gonçalves", "funcao": "RH & Pessoas", "sen": "Sócio/Fundador", "setor": "Consultoria", "grau": "1º", "icp": "Baixa"}, {"nome": "Ulisses Pimentel", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "Cybersecurity/Tech", "grau": "1º", "icp": "Baixa"}, {"nome": "Paulo Rebelo", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Rafael Balassiano", "funcao": "Finanças & Controladoria", "sen": "Diretor/VP", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Sergio Fonseca da Silva", "funcao": "TI/Tecnologia & IA", "sen": "Especialista/Analista", "setor": "Tech", "grau": "1º", "icp": "Baixa"}, {"nome": "Alessandro Alves de Souza", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Logística/Transporte", "grau": "1º", "icp": "Alta"}, {"nome": "Paulo Sérgio Gusmann", "funcao": "Marketing", "sen": "Diretor/VP", "setor": "Marketing", "grau": "1º", "icp": "Baixa"}, {"nome": "Bianca de Oliveira Ferreira", "funcao": "RH & Pessoas", "sen": "Diretor/VP", "setor": "Multissetorial", "grau": "1º", "icp": "Baixa"}, {"nome": "Ricardo C. Pais", "funcao": "Investidores & Capital", "sen": "C-Level/Board", "setor": "Capital/Deals", "grau": "1º", "icp": "Média"}, {"nome": "Abel Rochinha", "funcao": "Outros/Academia", "sen": "Especialista/Analista", "setor": "Indefinido", "grau": "1º", "icp": "Baixa"}, {"nome": "Roger S. Miralles Lacorte", "funcao": "Investidores & Capital", "sen": "Sócio/Fundador", "setor": "Family Office/Hospitalidade", "grau": "2º", "icp": "Média"}, {"nome": "Himanshu Vasani", "funcao": "TI/Tecnologia & IA", "sen": "Sócio/Fundador", "setor": "Tech", "grau": "1º", "icp": "Baixa"}, {"nome": "Cris Miura", "funcao": "Founders & Startups", "sen": "Sócio/Fundador", "setor": "EdTech", "grau": "1º", "icp": "Baixa"}, {"nome": "Jorge Estelles", "funcao": "Founders & Startups", "sen": "Sócio/Fundador", "setor": "Fintech", "grau": "1º", "icp": "Média"}, {"nome": "Daniel Santos", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Industrial/Engenharia", "grau": "1º", "icp": "Alta"}, {"nome": "João Batista Ribeiro", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Thaisê Freires", "funcao": "Vendas & Comercial", "sen": "Especialista/Analista", "setor": "Comex/Logística", "grau": "1º", "icp": "Alta"}, {"nome": "Paulo Roberto Manzieri", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "EPC/Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Kleber Luni Ribeiro", "funcao": "Tributário & Contábil", "sen": "Diretor/VP", "setor": "Engenharia (Promon)", "grau": "1º", "icp": "Alta"}, {"nome": "Cristian Yoshioka", "funcao": "Finanças & Controladoria", "sen": "Sócio/Fundador", "setor": "Consultoria", "grau": "1º", "icp": "Alta"}, {"nome": "Nasareno das Neves", "funcao": "Outros/Academia", "sen": "Especialista/Analista", "setor": "Educação", "grau": "1º", "icp": "Baixa"}, {"nome": "Felipe Ribenboim Dale", "funcao": "Investidores & Capital", "sen": "Sócio/Fundador", "setor": "Private Equity", "grau": "1º", "icp": "Média"}, {"nome": "Claudio Martinez Junior", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Edmundo Fornasari", "funcao": "Founders & Startups", "sen": "Sócio/Fundador", "setor": "Tech/Marketing", "grau": "1º", "icp": "Baixa"}, {"nome": "Jaider Lima", "funcao": "Tributário & Contábil", "sen": "Diretor/VP", "setor": "Tributário", "grau": "2º", "icp": "Alta"}, {"nome": "Marcos Ronaldo", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Varejo/Serviços", "grau": "1º", "icp": "Alta"}, {"nome": "Marcos Tabajara", "funcao": "Vendas & Comercial", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Baixa"}, {"nome": "Taila Crivari", "funcao": "Marketing", "sen": "Gerente/Coord", "setor": "Marketing", "grau": "1º", "icp": "Baixa"}, {"nome": "Jorge Cardoso", "funcao": "TI/Tecnologia & IA", "sen": "Especialista/Analista", "setor": "Tech (SAP)", "grau": "1º", "icp": "Média"}, {"nome": "Luiz Eduardo Leal", "funcao": "Marketing", "sen": "Gerente/Coord", "setor": "Marketing", "grau": "1º", "icp": "Baixa"}, {"nome": "João Henrique Duprat", "funcao": "Investidores & Capital", "sen": "Sócio/Fundador", "setor": "Investimentos", "grau": "1º", "icp": "Média"}, {"nome": "Rodrigo Farkuh", "funcao": "Investidores & Capital", "sen": "Diretor/VP", "setor": "Wealth/Private", "grau": "1º", "icp": "Média"}, {"nome": "Eduardo V. Cerqueira", "funcao": "Founders & Startups", "sen": "Sócio/Fundador", "setor": "Fintech/Wealth", "grau": "1º", "icp": "Média"}, {"nome": "Vinicius Cassemiro", "funcao": "Finanças & Controladoria", "sen": "Gerente/Coord", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Daniele da Silva Camillo", "funcao": "Marketing", "sen": "Gerente/Coord", "setor": "Marketing", "grau": "1º", "icp": "Baixa"}, {"nome": "Ivan Luiz de Almeida Vianna", "funcao": "Investidores & Capital", "sen": "Especialista/Analista", "setor": "Wealth (BTG)", "grau": "1º", "icp": "Média"}, {"nome": "Wagner Maluza", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "Multissetorial", "grau": "1º", "icp": "Baixa"}, {"nome": "Oscar Giordano", "funcao": "CEO/GM & Conselho", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Joaquim Venair Mendes", "funcao": "Finanças & Controladoria", "sen": "Diretor/VP", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Rodrigo Roland", "funcao": "TI/Tecnologia & IA", "sen": "Sócio/Fundador", "setor": "Software/Varejo", "grau": "1º", "icp": "Média"}, {"nome": "Leonardo Policarpo", "funcao": "Founders & Startups", "sen": "Sócio/Fundador", "setor": "Fintech", "grau": "2º", "icp": "Baixa"}, {"nome": "Dirceu Lauand", "funcao": "TI/Tecnologia & IA", "sen": "Especialista/Analista", "setor": "Tech (SAP/Tax)", "grau": "1º", "icp": "Alta"}, {"nome": "Reginaldo F. P. Ferreira", "funcao": "Investidores & Capital", "sen": "Especialista/Analista", "setor": "Crédito/FIDC", "grau": "2º", "icp": "Média"}, {"nome": "Ricardo Rodrigues Nogueira", "funcao": "CEO/GM & Conselho", "sen": "C-Level/Board", "setor": "Indústria/Varejo", "grau": "1º", "icp": "Alta"}, {"nome": "Vítor Pereira Faro", "funcao": "TI/Tecnologia & IA", "sen": "Especialista/Analista", "setor": "Energia/Tech", "grau": "1º", "icp": "Baixa"}, {"nome": "Fabio Davidovici", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Rogério Bandeira de Mello Canto e Sousa", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Paulo Tozzi", "funcao": "TI/Tecnologia & IA", "sen": "C-Level/Board", "setor": "Tech", "grau": "1º", "icp": "Baixa"}, {"nome": "Guido Rogerio Macedo Silveira Filho", "funcao": "Jurídico & Compliance", "sen": "C-Level/Board", "setor": "Energia/Óleo (Ipiranga)", "grau": "1º", "icp": "Alta"}, {"nome": "Flávio de Campos", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Sławomir Olejnik", "funcao": "Investidores & Capital", "sen": "Sócio/Fundador", "setor": "Deep Tech/VC", "grau": "1º", "icp": "Baixa"}, {"nome": "Paulo Cesar Vilela", "funcao": "Operações & Supply Chain", "sen": "Gerente/Coord", "setor": "Supply Chain", "grau": "1º", "icp": "Média"}, {"nome": "Mariana Costa", "funcao": "Tributário & Contábil", "sen": "Gerente/Coord", "setor": "Consultoria Tributária", "grau": "1º", "icp": "Alta"}, {"nome": "Marcelo Leme", "funcao": "TI/Tecnologia & IA", "sen": "Especialista/Analista", "setor": "Tech", "grau": "1º", "icp": "Baixa"}, {"nome": "Haroldo Monteiro", "funcao": "Investidores & Capital", "sen": "Diretor/VP", "setor": "Turnaround/Finanças", "grau": "1º", "icp": "Alta"}, {"nome": "Bruno Brisola", "funcao": "Operações & Supply Chain", "sen": "Diretor/VP", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Geraldo Neto", "funcao": "Founders & Startups", "sen": "Sócio/Fundador", "setor": "Venture/Investimentos", "grau": "1º", "icp": "Baixa"}, {"nome": "Júlio César Piazza", "funcao": "Finanças & Controladoria", "sen": "Gerente/Coord", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Daniel Patriota", "funcao": "Jurídico & Compliance", "sen": "Especialista/Analista", "setor": "GovTech (Serpro)", "grau": "1º", "icp": "Média"}, {"nome": "Ricardo Pelegrini", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Ramiro Pereira", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "Fintech/Logtech", "grau": "1º", "icp": "Média"}, {"nome": "Maurício Machado", "funcao": "CEO/GM & Conselho", "sen": "C-Level/Board", "setor": "Tech/Serviços", "grau": "1º", "icp": "Média"}, {"nome": "Fernando A. Brandão Galvão", "funcao": "Outros/Academia", "sen": "Especialista/Analista", "setor": "Indefinido", "grau": "1º", "icp": "Baixa"}, {"nome": "Adolfo Pires da Silva", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Gustavo Passi", "funcao": "Marketing", "sen": "Sócio/Fundador", "setor": "Mídia", "grau": "1º", "icp": "Baixa"}, {"nome": "Cleber Genero", "funcao": "Operações & Supply Chain", "sen": "C-Level/Board", "setor": "Crédito/Dados (Serasa)", "grau": "1º", "icp": "Média"}, {"nome": "Rosely Teixeira", "funcao": "Finanças & Controladoria", "sen": "Especialista/Analista", "setor": "Consultoria", "grau": "2º", "icp": "Alta"}, {"nome": "Roberto Pelegrini", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Davi Teles Pinheiro Vilagran", "funcao": "Finanças & Controladoria", "sen": "Gerente/Coord", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Edgard Melo", "funcao": "Founders & Startups", "sen": "Sócio/Fundador", "setor": "Fintech/NPL", "grau": "1º", "icp": "Média"}, {"nome": "Hugo Cotrin", "funcao": "CEO/GM & Conselho", "sen": "Diretor/VP", "setor": "Distribuição/MRO", "grau": "1º", "icp": "Alta"}, {"nome": "Jose Cicero", "funcao": "TI/Tecnologia & IA", "sen": "Especialista/Analista", "setor": "Tech", "grau": "2º", "icp": "Baixa"}, {"nome": "Carlos Storniolo", "funcao": "CEO/GM & Conselho", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Raphael Dib", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Growth Companies", "grau": "1º", "icp": "Alta"}, {"nome": "Leonardo Goulart", "funcao": "Founders & Startups", "sen": "Sócio/Fundador", "setor": "Fintech/Cobrança", "grau": "1º", "icp": "Média"}, {"nome": "Sandra Fernandes", "funcao": "Finanças & Controladoria", "sen": "Especialista/Analista", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Rafael Tomaz", "funcao": "Vendas & Comercial", "sen": "Gerente/Coord", "setor": "Tech (SONDA)", "grau": "1º", "icp": "Baixa"}, {"nome": "Gabrielle Vicelli", "funcao": "Jurídico & Compliance", "sen": "Especialista/Analista", "setor": "Jurídico", "grau": "1º", "icp": "Média"}, {"nome": "Reginaldo Rosa", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "Automotivo", "grau": "1º", "icp": "Média"}, {"nome": "Ricardo Cano", "funcao": "Operações & Supply Chain", "sen": "Diretor/VP", "setor": "Aviação/Viagens", "grau": "1º", "icp": "Média"}, {"nome": "Jorge Mendoza", "funcao": "Investidores & Capital", "sen": "Sócio/Fundador", "setor": "Private Equity", "grau": "1º", "icp": "Média"}, {"nome": "Carlos Junqueira", "funcao": "Investidores & Capital", "sen": "Diretor/VP", "setor": "Finanças/Funding", "grau": "1º", "icp": "Alta"}, {"nome": "Otavio Villela Conestabile", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "Gráfica", "grau": "1º", "icp": "Média"}, {"nome": "Humberto Tamarini Perez", "funcao": "Consultoria & Estratégia", "sen": "Sócio/Fundador", "setor": "Consultoria/Auditoria (GT)", "grau": "1º", "icp": "Alta"}, {"nome": "Taryn Silvestre", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Julio Ferreira", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Tech", "grau": "1º", "icp": "Média"}, {"nome": "Carlos Sá", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Alimentos (Camil)", "grau": "1º", "icp": "Alta"}, {"nome": "Paulo Melo", "funcao": "Founders & Startups", "sen": "Sócio/Fundador", "setor": "Tech/IA", "grau": "1º", "icp": "Baixa"}, {"nome": "Allan Alves", "funcao": "RH & Pessoas", "sen": "Diretor/VP", "setor": "Multissetorial", "grau": "1º", "icp": "Baixa"}, {"nome": "TZF Consultoria Analítica", "funcao": "Consultoria & Estratégia", "sen": "Sócio/Fundador", "setor": "Laboratório/Analytics", "grau": "1º", "icp": "Baixa"}, {"nome": "Alexandre Cardoso Fortine", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Construção/Incorporação", "grau": "1º", "icp": "Alta"}, {"nome": "Kauan Romão", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "B2B Enterprise", "grau": "1º", "icp": "Baixa"}, {"nome": "George Nunes", "funcao": "Finanças & Controladoria", "sen": "Especialista/Analista", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Marcos Camata", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Energia", "grau": "1º", "icp": "Alta"}, {"nome": "Daniel Paiva", "funcao": "TI/Tecnologia & IA", "sen": "Gerente/Coord", "setor": "Tech", "grau": "1º", "icp": "Baixa"}, {"nome": "Andréa Fugita da Silva", "funcao": "RH & Pessoas", "sen": "Especialista/Analista", "setor": "Multissetorial", "grau": "1º", "icp": "Baixa"}, {"nome": "Israel Crisóstomo", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Consultoria/Gestão", "grau": "1º", "icp": "Média"}, {"nome": "José De Albuquerque", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Felipe Mendes", "funcao": "Consultoria & Estratégia", "sen": "Sócio/Fundador", "setor": "Consultoria", "grau": "1º", "icp": "Alta"}, {"nome": "Emílio Herrero Filho", "funcao": "Consultoria & Estratégia", "sen": "Sócio/Fundador", "setor": "Estratégia", "grau": "1º", "icp": "Média"}, {"nome": "Hans Blankenburgh", "funcao": "Investidores & Capital", "sen": "Diretor/VP", "setor": "Consultoria/Market Entry", "grau": "1º", "icp": "Média"}, {"nome": "Mais TAHA", "funcao": "TI/Tecnologia & IA", "sen": "Diretor/VP", "setor": "Tech/Sustentabilidade", "grau": "1º", "icp": "Baixa"}, {"nome": "Patricia Cantalice", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Hotelaria", "grau": "1º", "icp": "Alta"}, {"nome": "Maryam Qasim", "funcao": "Marketing", "sen": "Sócio/Fundador", "setor": "Serviços/Marketing", "grau": "1º", "icp": "Baixa"}, {"nome": "Fábio Macchia", "funcao": "Consultoria & Estratégia", "sen": "Diretor/VP", "setor": "Consultoria", "grau": "2º", "icp": "Alta"}, {"nome": "Emerson Camargo", "funcao": "Operações & Supply Chain", "sen": "Especialista/Analista", "setor": "Indústria", "grau": "1º", "icp": "Média"}, {"nome": "Wilson Rossi Jr.", "funcao": "Consultoria & Estratégia", "sen": "Diretor/VP", "setor": "Consultoria/Turnaround", "grau": "1º", "icp": "Alta"}, {"nome": "Gab Piumbato", "funcao": "Marketing", "sen": "Sócio/Fundador", "setor": "Marketing/Coaching", "grau": "1º", "icp": "Baixa"}, {"nome": "Jamille Recco", "funcao": "Finanças & Controladoria", "sen": "Especialista/Analista", "setor": "Crédito/Cobrança", "grau": "2º", "icp": "Média"}, {"nome": "Eduardo Ducatti", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Embalagens/Indústria (Ball)", "grau": "1º", "icp": "Alta"}, {"nome": "Giandrei Basso", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "Agronegócio", "grau": "1º", "icp": "Alta"}, {"nome": "Cristiano José Gonçalves", "funcao": "Operações & Supply Chain", "sen": "Diretor/VP", "setor": "Multissetorial", "grau": "2º", "icp": "Média"}, {"nome": "Kátia Andrade", "funcao": "CEO/GM & Conselho", "sen": "C-Level/Board", "setor": "Telecom/Energia", "grau": "1º", "icp": "Média"}, {"nome": "Ahmed H.Hersi", "funcao": "Operações & Supply Chain", "sen": "Diretor/VP", "setor": "Logística", "grau": "2º", "icp": "Baixa"}, {"nome": "Gabriel Moraes de Outeiro", "funcao": "Jurídico & Compliance", "sen": "Diretor/VP", "setor": "Jurídico/ESG/Academia", "grau": "1º", "icp": "Média"}, {"nome": "Henrique Assunção Paim", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Construção/Finanças", "grau": "1º", "icp": "Alta"}, {"nome": "Antonio Torquato", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Joao Marcos de Paula Souza", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "Multissetorial", "grau": "1º", "icp": "Baixa"}, {"nome": "Rodolfo Spigai", "funcao": "Jurídico & Compliance", "sen": "Sócio/Fundador", "setor": "Jurídico/Consultoria", "grau": "1º", "icp": "Média"}, {"nome": "Joao Biarari", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Tech", "grau": "1º", "icp": "Média"}, {"nome": "Luis Alves", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Andre Brigagão Sant'Anna", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Mutlu Kurt", "funcao": "TI/Tecnologia & IA", "sen": "Sócio/Fundador", "setor": "Tech", "grau": "1º", "icp": "Baixa"}, {"nome": "Juarez Pereira de Araújo", "funcao": "Vendas & Comercial", "sen": "Sócio/Fundador", "setor": "Tech (DBACorp)", "grau": "1º", "icp": "Média"}, {"nome": "Fábio Braz", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "Engenharia", "grau": "1º", "icp": "Média"}, {"nome": "Marco Poyares", "funcao": "Vendas & Comercial", "sen": "Especialista/Analista", "setor": "Multissetorial", "grau": "1º", "icp": "Baixa"}, {"nome": "Marcelo Poletti", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Agronegócio", "grau": "1º", "icp": "Alta"}, {"nome": "Julio C.S. Marques", "funcao": "CEO/GM & Conselho", "sen": "C-Level/Board", "setor": "Governança", "grau": "1º", "icp": "Média"}, {"nome": "Jonas Moura", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Indústria/Náutica", "grau": "1º", "icp": "Alta"}, {"nome": "Lismara Kömel", "funcao": "Jurídico & Compliance", "sen": "Diretor/VP", "setor": "Jurídico/Tributário", "grau": "1º", "icp": "Alta"}, {"nome": "Luiz Giacomini", "funcao": "Finanças & Controladoria", "sen": "Diretor/VP", "setor": "Tesouraria", "grau": "1º", "icp": "Alta"}, {"nome": "MARCOS PAULO", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "Varejo", "grau": "1º", "icp": "Média"}, {"nome": "Murilo Cesar Moro", "funcao": "Tributário & Contábil", "sen": "Gerente/Coord", "setor": "Contabilidade", "grau": "1º", "icp": "Alta"}, {"nome": "Wagner Andrade Junior", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Juliana Burneiko", "funcao": "RH & Pessoas", "sen": "Diretor/VP", "setor": "Seguros (Porto)", "grau": "1º", "icp": "Baixa"}, {"nome": "Mauricio de Moura", "funcao": "Tributário & Contábil", "sen": "Sócio/Fundador", "setor": "Tributário (Grupo Vinde)", "grau": "1º", "icp": "Alta"}, {"nome": "Jeferson Baggio", "funcao": "TI/Tecnologia & IA", "sen": "Diretor/VP", "setor": "Tech/Inovação", "grau": "1º", "icp": "Baixa"}, {"nome": "Marcio Oliveira", "funcao": "CEO/GM & Conselho", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Altemar Coelho", "funcao": "Investidores & Capital", "sen": "Diretor/VP", "setor": "Banco/Crédito", "grau": "1º", "icp": "Média"}, {"nome": "Sergio Costantini", "funcao": "Investidores & Capital", "sen": "Diretor/VP", "setor": "Bancos/Advisory", "grau": "1º", "icp": "Média"}, {"nome": "Guilherme Artiles", "funcao": "Vendas & Comercial", "sen": "Sócio/Fundador", "setor": "Varejo/Tech", "grau": "1º", "icp": "Média"}];
+let inscDrawn=false, sortKI="icp", sortDirI=1;
+const PAL=['#1C5A63','#4F8A6A','#BE9A4C','#B05C46','#3A4F55','#6B7E83','#8AA0A4','#A5B5A0','#C9A86A','#7E5C6B','#5E7C84','#9C8654','#8B9DA0'];
+const ORD={'Alta':3,'Média':2,'Baixa':1};
+function cnt(arr,k){const m={};arr.forEach(d=>m[d[k]]=(m[d[k]]||0)+1);return Object.entries(m).sort((a,b)=>b[1]-a[1]);}
+function showTab(t){
+  const leads=t==='leads';
+  document.getElementById('viewLeads').style.display=leads?'block':'none';
+  document.getElementById('viewInscritos').style.display=leads?'none':'block';
+  document.getElementById('tabLeads').classList.toggle('active',leads);
+  document.getElementById('tabInsc').classList.toggle('active',!leads);
+  if(!leads&&!inscDrawn){drawInsc();inscDrawn=true;}
+}
+function drawInsc(){
+  if(typeof Chart==='undefined')return;
+  Chart.defaults.color='#6B7E83';Chart.defaults.font.family="-apple-system,Segoe UI,Roboto,sans-serif";
+  const n=INSC.length;
+  const dec=INSC.filter(d=>['C-Level/Board','Sócio/Fundador','Diretor/VP'].includes(d.sen)).length;
+  const alta=INSC.filter(d=>d.icp==='Alta').length;
+  const g1=INSC.filter(d=>d.grau==='1º').length;
+  document.getElementById('cardsInsc').innerHTML=
+    '<div class="card"><div class="cl">Inscritos</div><div class="cv">'+n+'</div></div>'+
+    '<div class="card"><div class="cl">Decisores</div><div class="cv">'+Math.round(dec/n*100)+'%</div></div>'+
+    '<div class="card"><div class="cl">Relevância alta</div><div class="cv" style="color:var(--verde)">'+alta+'</div></div>'+
+    '<div class="card"><div class="cl">Conexão 1º grau</div><div class="cv">'+Math.round(g1/n*100)+'%</div></div>';
+  const grid={color:'#DBE1DF'};
+  const f=cnt(INSC,'funcao');
+  new Chart(cFunc,{type:'bar',data:{labels:f.map(x=>x[0]),datasets:[{data:f.map(x=>x[1]),backgroundColor:PAL,borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid,ticks:{precision:0}},y:{grid:{display:false}}}}});
+  const s=cnt(INSC,'sen');
+  new Chart(cSen,{type:'bar',data:{labels:s.map(x=>x[0]),datasets:[{data:s.map(x=>x[1]),backgroundColor:'#1C5A63',borderRadius:4}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid,ticks:{precision:0}}}}});
+  const ic=[['Alta',INSC.filter(d=>d.icp==='Alta').length],['Média',INSC.filter(d=>d.icp==='Média').length],['Baixa',INSC.filter(d=>d.icp==='Baixa').length]];
+  new Chart(cIcp,{type:'doughnut',data:{labels:ic.map(x=>x[0]),datasets:[{data:ic.map(x=>x[1]),backgroundColor:['#4F8A6A','#BE9A4C','#6B7E83']}]},options:{plugins:{legend:{position:'right'}}}});
+  const setm={};INSC.forEach(d=>{let s=d.setor.toLowerCase(),g;
+    if(s.includes('tribut')||s.includes('contab'))g='Tributário/Contábil';
+    else if(s.includes('consult'))g='Consultoria';
+    else if(/tech|sap|software|fintech|saas/.test(s))g='Tecnologia/Fintech';
+    else if(/energia|óleo/.test(s))g='Energia/Óleo&Gás';
+    else if(/finan|wealth|crédito|banco|private|fidc|tesour|equity|venture|invest|capital|funding/.test(s))g='Serviços Financeiros';
+    else if(/indúst|engenharia|embalag|náutica/.test(s))g='Indústria/Engenharia';
+    else if(/varejo|distribui|mro/.test(s))g='Varejo/Distribuição';
+    else if(/logíst|transporte|supply|comex/.test(s))g='Logística/Supply Chain';
+    else if(s.includes('agro'))g='Agronegócio';
+    else if(/constru|imobil|incorpor/.test(s))g='Construção/Imobiliário';
+    else if(s.includes('telecom'))g='Telecom';
+    else if(/marketing|mídia|gráf/.test(s))g='Marketing/Mídia';
+    else if(/hotel|hospital/.test(s))g='Hotelaria';
+    else if(/farma|aliment/.test(s))g='Bens de Consumo/Farma';
+    else if(s.includes('jurídico'))g='Jurídico';
+    else if(s.includes('multissetorial'))g='Multissetorial';
+    else g='Outros';
+    setm[g]=(setm[g]||0)+1;});
+  const st=Object.entries(setm).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  new Chart(cSet,{type:'bar',data:{labels:st.map(x=>x[0]),datasets:[{data:st.map(x=>x[1]),backgroundColor:'#4F8A6A',borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid,ticks:{precision:0}},y:{grid:{display:false}}}}});
+  const al=cnt(INSC.filter(d=>d.icp==='Alta'),'funcao');
+  new Chart(cAlta,{type:'bar',data:{labels:al.map(x=>x[0]),datasets:[{data:al.map(x=>x[1]),backgroundColor:'#4F8A6A',borderRadius:4}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid,ticks:{precision:0}}}}});
+  [...new Set(INSC.map(d=>d.funcao))].sort().forEach(v=>fFunc.add(new Option(v,v)));
+  renderInsc();
+}
+function renderInsc(){
+  const q=(document.getElementById('buscaI').value||'').toLowerCase();
+  const ff=document.getElementById('fFunc').value, fi=document.getElementById('fIcp').value;
+  let r=INSC.filter(d=>(!q||d.nome.toLowerCase().includes(q))&&(!ff||d.funcao===ff)&&(!fi||d.icp===fi));
+  r.sort((a,b)=>{let x=a[sortKI],y=b[sortKI];if(sortKI==='icp'){x=ORD[x];y=ORD[y];}if(x<y)return -sortDirI;if(x>y)return sortDirI;return 0;});
+  document.getElementById('countI').textContent=r.length+' de '+INSC.length;
+  const cls=i=>'icp-'+i.replace('é','e');
+  document.getElementById('tbodyI').innerHTML=r.map(d=>'<tr><td>'+d.nome+'</td><td>'+d.funcao+'</td><td>'+d.sen+'</td><td>'+d.setor+'</td><td>'+d.grau+'</td><td><span class="icp '+cls(d.icp)+'">'+d.icp+'</span></td></tr>').join('');
+}
+document.querySelectorAll('th[data-ki]').forEach(th=>th.onclick=()=>{const k=th.dataset.ki;if(sortKI===k)sortDirI*=-1;else{sortKI=k;sortDirI=1;}renderInsc();});
+function exportInsc(){
+  const cols=['nome','funcao','sen','setor','grau','icp'];
+  const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const lines=[cols.join(',')].concat(INSC.map(l=>cols.map(c=>esc(l[c])).join(',')));
+  const blob=new Blob(["\ufeff"+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='inscritos-newsletter.csv';a.click();
+}
+</script>
+</head>
+<body>
+<div class="wrap">
+  <h1>Termômetro da Reforma · Admin</h1>
+  <div class="sub">Leads capturados, acessos e respostas completas. Acesso restrito.</div>
+
+  <div id="loginBox" class="login">
+    <label>Token de acesso</label>
+    <input type="password" id="token" placeholder="cole o token de admin" autocomplete="off">
+    <div style="margin-top:12px"><button class="btn btn-primary" style="width:100%" onclick="entrar()">Entrar</button></div>
+    <div class="err" id="loginErr"></div>
+  </div>
+
+  <div id="app" style="display:none">
+    <div class="tabs">
+      <button class="tab active" id="tabLeads" onclick="showTab('leads')">Leads · Termômetro</button>
+      <button class="tab" id="tabInsc" onclick="showTab('insc')">Inscritos · Newsletter</button>
+    </div>
+    <div id="viewLeads">
+    <div class="cards" id="cards"></div>
+    <div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin:20px 0 8px">Aquisição · de onde vêm os leads</div>
+    <div class="cards" id="acq"></div>
+    <div class="toolbar">
+      <input type="search" id="busca" placeholder="Buscar por e-mail, empresa, setor..." oninput="renderTable()">
+      <button class="btn btn-ghost" onclick="carregar()">Atualizar</button>
+      <button class="btn btn-ghost" onclick="exportCSV()">Exportar CSV</button>
+      <span class="muted" id="count"></span>
+    </div>
+    <table>
+      <thead><tr>
+        <th data-k="created_at">Data</th><th data-k="email">E-mail</th><th data-k="empresa">Empresa</th>
+        <th data-k="setor">Setor</th><th data-k="faturamento">Faturamento</th>
+        <th data-k="geral">Exposição</th><th data-k="zona">Zona</th><th>Fonte</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    </div><!-- /viewLeads -->
+
+    <div id="viewInscritos" style="display:none">
+      <div class="sub" style="margin-bottom:16px">162 contatos do LinkedIn inscritos na newsletter, classificados por função, senioridade, setor e relevância para a consultoria.</div>
+      <div class="cards" id="cardsInsc"></div>
+      <div class="chartgrid">
+        <div class="chartcard"><h4>Distribuição por função</h4><canvas id="cFunc"></canvas></div>
+        <div class="chartcard"><h4>Senioridade</h4><canvas id="cSen"></canvas></div>
+      </div>
+      <div class="chartgrid">
+        <div class="chartcard"><h4>Relevância para a consultoria (ICP)</h4><canvas id="cIcp"></canvas>
+          <div class="note">Alta = decisor de finanças/tributário/operações ou dono de negócio diretamente impactado. Média = influência indireta. Baixa = função distante do tema.</div></div>
+        <div class="chartcard"><h4>Setor (top 10)</h4><canvas id="cSet"></canvas></div>
+      </div>
+      <div class="chartcard full" style="margin-bottom:14px"><h4>Relevância alta por função — onde concentrar o outreach</h4><canvas id="cAlta"></canvas></div>
+      <div class="toolbar">
+        <input type="search" id="buscaI" placeholder="Buscar por nome..." oninput="renderInsc()">
+        <select id="fFunc" onchange="renderInsc()"><option value="">Todas as funções</option></select>
+        <select id="fIcp" onchange="renderInsc()"><option value="">Todo ICP</option><option>Alta</option><option>Média</option><option>Baixa</option></select>
+        <button class="btn btn-ghost" onclick="exportInsc()">Exportar CSV</button>
+        <span class="muted" id="countI"></span>
+      </div>
+      <table>
+        <thead><tr>
+          <th data-ki="nome">Nome</th><th data-ki="funcao">Função</th><th data-ki="sen">Senioridade</th>
+          <th data-ki="setor">Setor</th><th data-ki="grau">Grau</th><th data-ki="icp">ICP</th>
+        </tr></thead>
+        <tbody id="tbodyI"></tbody>
+      </table>
+    </div><!-- /viewInscritos -->
+  </div>
+</div>
+
+<script>
+const ENDPOINT="https://zjpeyecjtfqwfxhpebpt.supabase.co/functions/v1/admin-leads";
+let TOKEN="", LEADS=[], sortK="created_at", sortDir=-1;
+
+function entrar(){
+  TOKEN=document.getElementById('token').value.trim();
+  if(!TOKEN){document.getElementById('loginErr').textContent='Informe o token.';return;}
+  carregar();
+}
+function carregar(){
+  document.getElementById('loginErr').textContent='';
+  fetch(ENDPOINT,{headers:{'x-admin-token':TOKEN}}).then(async r=>{
+    if(r.status===401){document.getElementById('loginErr').textContent='Token inválido.';return;}
+    const d=await r.json();
+    LEADS=d.leads||[];
+    document.getElementById('loginBox').style.display='none';
+    document.getElementById('app').style.display='block';
+    renderCards();renderAcq();renderTable();
+  }).catch(()=>{document.getElementById('loginErr').textContent='Falha de conexão.';});
+}
+function fmtDate(s){try{return new Date(s).toLocaleString('pt-BR');}catch(e){return s||'';}}
+function setor(s){return ({ind:'Indústria',com:'Comércio',ser:'Serviços',mis:'Misto'})[s]||s||'';}
+function renderCards(){
+  const n=LEADS.length;
+  const z=k=>LEADS.filter(l=>l.zona===k).length;
+  const d7=LEADS.filter(l=>new Date(l.created_at)>=new Date(Date.now()-7*864e5)).length;
+  const org={};LEADS.forEach(l=>{org[l.origem||'—']=(org[l.origem||'—']||0)+1;});
+  const topOrg=Object.entries(org).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('cards').innerHTML=`
+    <div class="card"><div class="cl">Total de leads</div><div class="cv">${n}</div></div>
+    <div class="card"><div class="cl">Últimos 7 dias</div><div class="cv">${d7}</div></div>
+    <div class="card"><div class="cl">Zona crítica</div><div class="cv" style="color:var(--vermelho)">${z('critica')}</div></div>
+    <div class="card"><div class="cl">Atenção</div><div class="cv" style="color:#8a6d28">${z('atencao')}</div></div>
+    <div class="card"><div class="cl">Sob controle</div><div class="cv" style="color:var(--verde)">${z('controle')}</div></div>
+    <div class="card"><div class="cl">Origem principal</div><div class="cv" style="font-size:18px">${topOrg?topOrg[0]+' ('+topOrg[1]+')':'—'}</div></div>`;
+}
+function host(u){try{return new URL(u).hostname.replace(/^www\./,'');}catch(e){return '';}}
+function srcOf(l){
+  if(l.utm_source) return l.utm_source;
+  const h=host(l.referrer||'');
+  if(!h) return 'Direto';
+  if(/google/.test(h)) return 'Google';
+  if(/bing/.test(h)) return 'Bing';
+  if(/instagram|facebook|fb\.|linkedin|t\.co|twitter|x\.com/.test(h)) return 'Social';
+  if(/eqvalor/.test(h)) return 'Site (LP)';
+  return h;
+}
+function renderAcq(){
+  const n=LEADS.length||1;
+  const by=f=>{const m={};LEADS.forEach(l=>{const k=(f(l)||'').toString();if(k)m[k]=(m[k]||0)+1;});return Object.entries(m).sort((a,b)=>b[1]-a[1]);};
+  const src=by(srcOf), camp=by(l=>l.utm_campaign);
+  const mob=LEADS.filter(l=>l.device==='mobile').length;
+  const direto=LEADS.filter(l=>srcOf(l)==='Direto').length;
+  const top=a=>a[0]?a[0][0]+' ('+a[0][1]+')':'—';
+  document.getElementById('acq').innerHTML=
+    '<div class="card"><div class="cl">Fonte principal</div><div class="cv" style="font-size:18px">'+top(src)+'</div></div>'+
+    '<div class="card"><div class="cl">Top campanha (UTM)</div><div class="cv" style="font-size:18px">'+top(camp)+'</div></div>'+
+    '<div class="card"><div class="cl">Mobile</div><div class="cv">'+Math.round(mob/n*100)+'%</div></div>'+
+    '<div class="card"><div class="cl">Tráfego direto</div><div class="cv">'+Math.round(direto/n*100)+'%</div></div>';
+}
+function renderTable(){
+  const q=(document.getElementById('busca').value||'').toLowerCase();
+  let rows=LEADS.filter(l=>!q||[l.email,l.empresa,l.setor,l.origem,l.cnae].join(' ').toLowerCase().includes(q));
+  rows=rows.slice().sort((a,b)=>{let x=a[sortK],y=b[sortK];if(sortK==='geral'){x=+x||0;y=+y||0;}else{x=(x||'').toString();y=(y||'').toString();}return x<y?-sortDir:x>y?sortDir:0;});
+  document.getElementById('count').textContent=rows.length+' de '+LEADS.length;
+  const tb=document.getElementById('tbody');tb.innerHTML='';
+  rows.forEach(l=>{
+    const tr=document.createElement('tr');tr.className='lead';
+    const zc=l.zona?('z-'+l.zona):'';
+    tr.innerHTML=`<td>${fmtDate(l.created_at)}</td><td>${l.email||''}</td><td>${l.empresa||'<span class=muted>—</span>'}</td>
+      <td>${setor(l.setor)}</td><td>${l.faturamento||''}</td><td><b>${l.geral!=null?l.geral:''}</b></td>
+      <td>${l.zona?`<span class="zona ${zc}">${l.zona}</span>`:''}</td><td class="muted">${srcOf(l)}</td>`;
+    const det=document.createElement('tr');det.className='detail';det.style.display='none';
+    det.innerHTML=`<td colspan="8"><div class="kv">
+      <div><span>id:</span> ${l.id}</div>
+      <div><span>impacto:</span> ${l.impacto??'—'}</div>
+      <div><span>vulnerabilidade:</span> ${l.vulnerabilidade??'—'}</div>
+      <div><span>margem em risco:</span> ${l.margem_risco||'—'}</div>
+      <div><span>capital de giro:</span> ${l.giro_adicional||'—'}</div>
+      <div><span>caixa livre 2027:</span> ${l.caixa_livre_2027||'—'}</div>
+      <div><span>regime:</span> ${l.regime||'—'}</div>
+      <div><span>margem informada:</span> ${l.margem||'—'}</div>
+      <div><span>carga efetiva %:</span> ${l.carga_pct||'—'}</div>
+      <div><span>ERP:</span> ${l.erp_nome||'—'}</div>
+      <div><span>setor/CNAE:</span> ${l.cnae||'—'}</div>
+      <div><span>fonte:</span> ${srcOf(l)}</div>
+      <div><span>referrer:</span> ${l.referrer||'—'}</div>
+      <div><span>utm (source/medium/camp):</span> ${(l.utm_source||'—')+' / '+(l.utm_medium||'—')+' / '+(l.utm_campaign||'—')}</div>
+      <div><span>dispositivo:</span> ${l.device||'—'}</div>
+      <div><span>landing:</span> ${l.landing_url||'—'}</div>
+      </div><pre>${l.respostas?JSON.stringify(l.respostas,null,2):'sem respostas detalhadas (lead anterior à atualização)'}</pre></td>`;
+    tr.onclick=()=>{det.style.display=det.style.display==='none'?'table-row':'none';};
+    tb.appendChild(tr);tb.appendChild(det);
+  });
+}
+document.querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(sortK===k)sortDir*=-1;else{sortK=k;sortDir=-1;}renderTable();});
+function exportCSV(){
+  const cols=['created_at','email','empresa','cnae','setor','faturamento','margem','regime','geral','impacto','vulnerabilidade','zona','margem_risco','giro_adicional','caixa_livre_2027','origem','id'];
+  const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const lines=[cols.join(',')].concat(LEADS.map(l=>cols.map(c=>esc(l[c])).join(',')));
+  const blob=new Blob(["﻿"+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='leads-termometro.csv';a.click();
+}
+document.getElementById('token').addEventListener('keydown',e=>{if(e.key==='Enter')entrar();});
+
+/* ===== Inscritos da newsletter (dados estáticos) ===== */
+const INSC=[{"nome": "Jason Baumann", "funcao": "Vendas & Comercial", "sen": "Gerente/Coord", "setor": "Consultoria/Educação", "grau": "1º", "icp": "Média"}, {"nome": "Rubens Tavares", "funcao": "Tributário & Contábil", "sen": "Sócio/Fundador", "setor": "Consultoria Tributária", "grau": "1º", "icp": "Alta"}, {"nome": "Claudio Cesar Braulio Carneiro", "funcao": "Operações & Supply Chain", "sen": "Gerente/Coord", "setor": "Telecom/Tech", "grau": "1º", "icp": "Média"}, {"nome": "Cindy Evelin", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "SaaS/Fintech", "grau": "1º", "icp": "Baixa"}, {"nome": "Carlos Reimer", "funcao": "Operações & Supply Chain", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Marçal Junqueira", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Middle Market", "grau": "1º", "icp": "Alta"}, {"nome": "Tiago Arduim", "funcao": "Operações & Supply Chain", "sen": "Gerente/Coord", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Wagner Rodrigues", "funcao": "CEO/GM & Conselho", "sen": "Diretor/VP", "setor": "Automotivo", "grau": "1º", "icp": "Média"}, {"nome": "Amaury Martins", "funcao": "Tributário & Contábil", "sen": "Especialista/Analista", "setor": "Contabilidade", "grau": "1º", "icp": "Alta"}, {"nome": "João Luiz Carvalho", "funcao": "CEO/GM & Conselho", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Leandro Leonardo Libardi", "funcao": "RH & Pessoas", "sen": "Gerente/Coord", "setor": "Consultoria", "grau": "1º", "icp": "Baixa"}, {"nome": "Luis Carlos Araújo", "funcao": "Finanças & Controladoria", "sen": "Diretor/VP", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Saulo Batista", "funcao": "Operações & Supply Chain", "sen": "Especialista/Analista", "setor": "Farma", "grau": "1º", "icp": "Média"}, {"nome": "Roberto Dardis", "funcao": "Investidores & Capital", "sen": "Diretor/VP", "setor": "Finanças/Economia", "grau": "1º", "icp": "Média"}, {"nome": "Guilherme Stefani Carlini", "funcao": "Operações & Supply Chain", "sen": "C-Level/Board", "setor": "Bancos/Imobiliário", "grau": "1º", "icp": "Média"}, {"nome": "Alex Almeida", "funcao": "TI/Tecnologia & IA", "sen": "Sócio/Fundador", "setor": "Tech", "grau": "1º", "icp": "Baixa"}, {"nome": "Janos Denes Olivas Hunkar", "funcao": "Operações & Supply Chain", "sen": "Gerente/Coord", "setor": "Supply Chain", "grau": "1º", "icp": "Média"}, {"nome": "Geraldo Barbosa", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "BPO/Serviços", "grau": "1º", "icp": "Média"}, {"nome": "Paulo Taro Kuchiki", "funcao": "TI/Tecnologia & IA", "sen": "Especialista/Analista", "setor": "Telecom", "grau": "1º", "icp": "Baixa"}, {"nome": "Marcos A. de Lira", "funcao": "Consultoria & Estratégia", "sen": "Especialista/Analista", "setor": "Multissetorial", "grau": "1º", "icp": "Baixa"}, {"nome": "Mario Sossai", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Energia", "grau": "1º", "icp": "Alta"}, {"nome": "Claudia Gonçalves", "funcao": "RH & Pessoas", "sen": "Sócio/Fundador", "setor": "Consultoria", "grau": "1º", "icp": "Baixa"}, {"nome": "Ulisses Pimentel", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "Cybersecurity/Tech", "grau": "1º", "icp": "Baixa"}, {"nome": "Paulo Rebelo", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Rafael Balassiano", "funcao": "Finanças & Controladoria", "sen": "Diretor/VP", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Sergio Fonseca da Silva", "funcao": "TI/Tecnologia & IA", "sen": "Especialista/Analista", "setor": "Tech", "grau": "1º", "icp": "Baixa"}, {"nome": "Alessandro Alves de Souza", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Logística/Transporte", "grau": "1º", "icp": "Alta"}, {"nome": "Paulo Sérgio Gusmann", "funcao": "Marketing", "sen": "Diretor/VP", "setor": "Marketing", "grau": "1º", "icp": "Baixa"}, {"nome": "Bianca de Oliveira Ferreira", "funcao": "RH & Pessoas", "sen": "Diretor/VP", "setor": "Multissetorial", "grau": "1º", "icp": "Baixa"}, {"nome": "Ricardo C. Pais", "funcao": "Investidores & Capital", "sen": "C-Level/Board", "setor": "Capital/Deals", "grau": "1º", "icp": "Média"}, {"nome": "Abel Rochinha", "funcao": "Outros/Academia", "sen": "Especialista/Analista", "setor": "Indefinido", "grau": "1º", "icp": "Baixa"}, {"nome": "Roger S. Miralles Lacorte", "funcao": "Investidores & Capital", "sen": "Sócio/Fundador", "setor": "Family Office/Hospitalidade", "grau": "2º", "icp": "Média"}, {"nome": "Himanshu Vasani", "funcao": "TI/Tecnologia & IA", "sen": "Sócio/Fundador", "setor": "Tech", "grau": "1º", "icp": "Baixa"}, {"nome": "Cris Miura", "funcao": "Founders & Startups", "sen": "Sócio/Fundador", "setor": "EdTech", "grau": "1º", "icp": "Baixa"}, {"nome": "Jorge Estelles", "funcao": "Founders & Startups", "sen": "Sócio/Fundador", "setor": "Fintech", "grau": "1º", "icp": "Média"}, {"nome": "Daniel Santos", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Industrial/Engenharia", "grau": "1º", "icp": "Alta"}, {"nome": "João Batista Ribeiro", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Thaisê Freires", "funcao": "Vendas & Comercial", "sen": "Especialista/Analista", "setor": "Comex/Logística", "grau": "1º", "icp": "Alta"}, {"nome": "Paulo Roberto Manzieri", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "EPC/Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Kleber Luni Ribeiro", "funcao": "Tributário & Contábil", "sen": "Diretor/VP", "setor": "Engenharia (Promon)", "grau": "1º", "icp": "Alta"}, {"nome": "Cristian Yoshioka", "funcao": "Finanças & Controladoria", "sen": "Sócio/Fundador", "setor": "Consultoria", "grau": "1º", "icp": "Alta"}, {"nome": "Nasareno das Neves", "funcao": "Outros/Academia", "sen": "Especialista/Analista", "setor": "Educação", "grau": "1º", "icp": "Baixa"}, {"nome": "Felipe Ribenboim Dale", "funcao": "Investidores & Capital", "sen": "Sócio/Fundador", "setor": "Private Equity", "grau": "1º", "icp": "Média"}, {"nome": "Claudio Martinez Junior", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Edmundo Fornasari", "funcao": "Founders & Startups", "sen": "Sócio/Fundador", "setor": "Tech/Marketing", "grau": "1º", "icp": "Baixa"}, {"nome": "Jaider Lima", "funcao": "Tributário & Contábil", "sen": "Diretor/VP", "setor": "Tributário", "grau": "2º", "icp": "Alta"}, {"nome": "Marcos Ronaldo", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Varejo/Serviços", "grau": "1º", "icp": "Alta"}, {"nome": "Marcos Tabajara", "funcao": "Vendas & Comercial", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Baixa"}, {"nome": "Taila Crivari", "funcao": "Marketing", "sen": "Gerente/Coord", "setor": "Marketing", "grau": "1º", "icp": "Baixa"}, {"nome": "Jorge Cardoso", "funcao": "TI/Tecnologia & IA", "sen": "Especialista/Analista", "setor": "Tech (SAP)", "grau": "1º", "icp": "Média"}, {"nome": "Luiz Eduardo Leal", "funcao": "Marketing", "sen": "Gerente/Coord", "setor": "Marketing", "grau": "1º", "icp": "Baixa"}, {"nome": "João Henrique Duprat", "funcao": "Investidores & Capital", "sen": "Sócio/Fundador", "setor": "Investimentos", "grau": "1º", "icp": "Média"}, {"nome": "Rodrigo Farkuh", "funcao": "Investidores & Capital", "sen": "Diretor/VP", "setor": "Wealth/Private", "grau": "1º", "icp": "Média"}, {"nome": "Eduardo V. Cerqueira", "funcao": "Founders & Startups", "sen": "Sócio/Fundador", "setor": "Fintech/Wealth", "grau": "1º", "icp": "Média"}, {"nome": "Vinicius Cassemiro", "funcao": "Finanças & Controladoria", "sen": "Gerente/Coord", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Daniele da Silva Camillo", "funcao": "Marketing", "sen": "Gerente/Coord", "setor": "Marketing", "grau": "1º", "icp": "Baixa"}, {"nome": "Ivan Luiz de Almeida Vianna", "funcao": "Investidores & Capital", "sen": "Especialista/Analista", "setor": "Wealth (BTG)", "grau": "1º", "icp": "Média"}, {"nome": "Wagner Maluza", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "Multissetorial", "grau": "1º", "icp": "Baixa"}, {"nome": "Oscar Giordano", "funcao": "CEO/GM & Conselho", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Joaquim Venair Mendes", "funcao": "Finanças & Controladoria", "sen": "Diretor/VP", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Rodrigo Roland", "funcao": "TI/Tecnologia & IA", "sen": "Sócio/Fundador", "setor": "Software/Varejo", "grau": "1º", "icp": "Média"}, {"nome": "Leonardo Policarpo", "funcao": "Founders & Startups", "sen": "Sócio/Fundador", "setor": "Fintech", "grau": "2º", "icp": "Baixa"}, {"nome": "Dirceu Lauand", "funcao": "TI/Tecnologia & IA", "sen": "Especialista/Analista", "setor": "Tech (SAP/Tax)", "grau": "1º", "icp": "Alta"}, {"nome": "Reginaldo F. P. Ferreira", "funcao": "Investidores & Capital", "sen": "Especialista/Analista", "setor": "Crédito/FIDC", "grau": "2º", "icp": "Média"}, {"nome": "Ricardo Rodrigues Nogueira", "funcao": "CEO/GM & Conselho", "sen": "C-Level/Board", "setor": "Indústria/Varejo", "grau": "1º", "icp": "Alta"}, {"nome": "Vítor Pereira Faro", "funcao": "TI/Tecnologia & IA", "sen": "Especialista/Analista", "setor": "Energia/Tech", "grau": "1º", "icp": "Baixa"}, {"nome": "Fabio Davidovici", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Rogério Bandeira de Mello Canto e Sousa", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Paulo Tozzi", "funcao": "TI/Tecnologia & IA", "sen": "C-Level/Board", "setor": "Tech", "grau": "1º", "icp": "Baixa"}, {"nome": "Guido Rogerio Macedo Silveira Filho", "funcao": "Jurídico & Compliance", "sen": "C-Level/Board", "setor": "Energia/Óleo (Ipiranga)", "grau": "1º", "icp": "Alta"}, {"nome": "Flávio de Campos", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Sławomir Olejnik", "funcao": "Investidores & Capital", "sen": "Sócio/Fundador", "setor": "Deep Tech/VC", "grau": "1º", "icp": "Baixa"}, {"nome": "Paulo Cesar Vilela", "funcao": "Operações & Supply Chain", "sen": "Gerente/Coord", "setor": "Supply Chain", "grau": "1º", "icp": "Média"}, {"nome": "Mariana Costa", "funcao": "Tributário & Contábil", "sen": "Gerente/Coord", "setor": "Consultoria Tributária", "grau": "1º", "icp": "Alta"}, {"nome": "Marcelo Leme", "funcao": "TI/Tecnologia & IA", "sen": "Especialista/Analista", "setor": "Tech", "grau": "1º", "icp": "Baixa"}, {"nome": "Haroldo Monteiro", "funcao": "Investidores & Capital", "sen": "Diretor/VP", "setor": "Turnaround/Finanças", "grau": "1º", "icp": "Alta"}, {"nome": "Bruno Brisola", "funcao": "Operações & Supply Chain", "sen": "Diretor/VP", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Geraldo Neto", "funcao": "Founders & Startups", "sen": "Sócio/Fundador", "setor": "Venture/Investimentos", "grau": "1º", "icp": "Baixa"}, {"nome": "Júlio César Piazza", "funcao": "Finanças & Controladoria", "sen": "Gerente/Coord", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Daniel Patriota", "funcao": "Jurídico & Compliance", "sen": "Especialista/Analista", "setor": "GovTech (Serpro)", "grau": "1º", "icp": "Média"}, {"nome": "Ricardo Pelegrini", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Ramiro Pereira", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "Fintech/Logtech", "grau": "1º", "icp": "Média"}, {"nome": "Maurício Machado", "funcao": "CEO/GM & Conselho", "sen": "C-Level/Board", "setor": "Tech/Serviços", "grau": "1º", "icp": "Média"}, {"nome": "Fernando A. Brandão Galvão", "funcao": "Outros/Academia", "sen": "Especialista/Analista", "setor": "Indefinido", "grau": "1º", "icp": "Baixa"}, {"nome": "Adolfo Pires da Silva", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Gustavo Passi", "funcao": "Marketing", "sen": "Sócio/Fundador", "setor": "Mídia", "grau": "1º", "icp": "Baixa"}, {"nome": "Cleber Genero", "funcao": "Operações & Supply Chain", "sen": "C-Level/Board", "setor": "Crédito/Dados (Serasa)", "grau": "1º", "icp": "Média"}, {"nome": "Rosely Teixeira", "funcao": "Finanças & Controladoria", "sen": "Especialista/Analista", "setor": "Consultoria", "grau": "2º", "icp": "Alta"}, {"nome": "Roberto Pelegrini", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Davi Teles Pinheiro Vilagran", "funcao": "Finanças & Controladoria", "sen": "Gerente/Coord", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Edgard Melo", "funcao": "Founders & Startups", "sen": "Sócio/Fundador", "setor": "Fintech/NPL", "grau": "1º", "icp": "Média"}, {"nome": "Hugo Cotrin", "funcao": "CEO/GM & Conselho", "sen": "Diretor/VP", "setor": "Distribuição/MRO", "grau": "1º", "icp": "Alta"}, {"nome": "Jose Cicero", "funcao": "TI/Tecnologia & IA", "sen": "Especialista/Analista", "setor": "Tech", "grau": "2º", "icp": "Baixa"}, {"nome": "Carlos Storniolo", "funcao": "CEO/GM & Conselho", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Raphael Dib", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Growth Companies", "grau": "1º", "icp": "Alta"}, {"nome": "Leonardo Goulart", "funcao": "Founders & Startups", "sen": "Sócio/Fundador", "setor": "Fintech/Cobrança", "grau": "1º", "icp": "Média"}, {"nome": "Sandra Fernandes", "funcao": "Finanças & Controladoria", "sen": "Especialista/Analista", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Rafael Tomaz", "funcao": "Vendas & Comercial", "sen": "Gerente/Coord", "setor": "Tech (SONDA)", "grau": "1º", "icp": "Baixa"}, {"nome": "Gabrielle Vicelli", "funcao": "Jurídico & Compliance", "sen": "Especialista/Analista", "setor": "Jurídico", "grau": "1º", "icp": "Média"}, {"nome": "Reginaldo Rosa", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "Automotivo", "grau": "1º", "icp": "Média"}, {"nome": "Ricardo Cano", "funcao": "Operações & Supply Chain", "sen": "Diretor/VP", "setor": "Aviação/Viagens", "grau": "1º", "icp": "Média"}, {"nome": "Jorge Mendoza", "funcao": "Investidores & Capital", "sen": "Sócio/Fundador", "setor": "Private Equity", "grau": "1º", "icp": "Média"}, {"nome": "Carlos Junqueira", "funcao": "Investidores & Capital", "sen": "Diretor/VP", "setor": "Finanças/Funding", "grau": "1º", "icp": "Alta"}, {"nome": "Otavio Villela Conestabile", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "Gráfica", "grau": "1º", "icp": "Média"}, {"nome": "Humberto Tamarini Perez", "funcao": "Consultoria & Estratégia", "sen": "Sócio/Fundador", "setor": "Consultoria/Auditoria (GT)", "grau": "1º", "icp": "Alta"}, {"nome": "Taryn Silvestre", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Julio Ferreira", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Tech", "grau": "1º", "icp": "Média"}, {"nome": "Carlos Sá", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Alimentos (Camil)", "grau": "1º", "icp": "Alta"}, {"nome": "Paulo Melo", "funcao": "Founders & Startups", "sen": "Sócio/Fundador", "setor": "Tech/IA", "grau": "1º", "icp": "Baixa"}, {"nome": "Allan Alves", "funcao": "RH & Pessoas", "sen": "Diretor/VP", "setor": "Multissetorial", "grau": "1º", "icp": "Baixa"}, {"nome": "TZF Consultoria Analítica", "funcao": "Consultoria & Estratégia", "sen": "Sócio/Fundador", "setor": "Laboratório/Analytics", "grau": "1º", "icp": "Baixa"}, {"nome": "Alexandre Cardoso Fortine", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Construção/Incorporação", "grau": "1º", "icp": "Alta"}, {"nome": "Kauan Romão", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "B2B Enterprise", "grau": "1º", "icp": "Baixa"}, {"nome": "George Nunes", "funcao": "Finanças & Controladoria", "sen": "Especialista/Analista", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Marcos Camata", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Energia", "grau": "1º", "icp": "Alta"}, {"nome": "Daniel Paiva", "funcao": "TI/Tecnologia & IA", "sen": "Gerente/Coord", "setor": "Tech", "grau": "1º", "icp": "Baixa"}, {"nome": "Andréa Fugita da Silva", "funcao": "RH & Pessoas", "sen": "Especialista/Analista", "setor": "Multissetorial", "grau": "1º", "icp": "Baixa"}, {"nome": "Israel Crisóstomo", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Consultoria/Gestão", "grau": "1º", "icp": "Média"}, {"nome": "José De Albuquerque", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Felipe Mendes", "funcao": "Consultoria & Estratégia", "sen": "Sócio/Fundador", "setor": "Consultoria", "grau": "1º", "icp": "Alta"}, {"nome": "Emílio Herrero Filho", "funcao": "Consultoria & Estratégia", "sen": "Sócio/Fundador", "setor": "Estratégia", "grau": "1º", "icp": "Média"}, {"nome": "Hans Blankenburgh", "funcao": "Investidores & Capital", "sen": "Diretor/VP", "setor": "Consultoria/Market Entry", "grau": "1º", "icp": "Média"}, {"nome": "Mais TAHA", "funcao": "TI/Tecnologia & IA", "sen": "Diretor/VP", "setor": "Tech/Sustentabilidade", "grau": "1º", "icp": "Baixa"}, {"nome": "Patricia Cantalice", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Hotelaria", "grau": "1º", "icp": "Alta"}, {"nome": "Maryam Qasim", "funcao": "Marketing", "sen": "Sócio/Fundador", "setor": "Serviços/Marketing", "grau": "1º", "icp": "Baixa"}, {"nome": "Fábio Macchia", "funcao": "Consultoria & Estratégia", "sen": "Diretor/VP", "setor": "Consultoria", "grau": "2º", "icp": "Alta"}, {"nome": "Emerson Camargo", "funcao": "Operações & Supply Chain", "sen": "Especialista/Analista", "setor": "Indústria", "grau": "1º", "icp": "Média"}, {"nome": "Wilson Rossi Jr.", "funcao": "Consultoria & Estratégia", "sen": "Diretor/VP", "setor": "Consultoria/Turnaround", "grau": "1º", "icp": "Alta"}, {"nome": "Gab Piumbato", "funcao": "Marketing", "sen": "Sócio/Fundador", "setor": "Marketing/Coaching", "grau": "1º", "icp": "Baixa"}, {"nome": "Jamille Recco", "funcao": "Finanças & Controladoria", "sen": "Especialista/Analista", "setor": "Crédito/Cobrança", "grau": "2º", "icp": "Média"}, {"nome": "Eduardo Ducatti", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Embalagens/Indústria (Ball)", "grau": "1º", "icp": "Alta"}, {"nome": "Giandrei Basso", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "Agronegócio", "grau": "1º", "icp": "Alta"}, {"nome": "Cristiano José Gonçalves", "funcao": "Operações & Supply Chain", "sen": "Diretor/VP", "setor": "Multissetorial", "grau": "2º", "icp": "Média"}, {"nome": "Kátia Andrade", "funcao": "CEO/GM & Conselho", "sen": "C-Level/Board", "setor": "Telecom/Energia", "grau": "1º", "icp": "Média"}, {"nome": "Ahmed H.Hersi", "funcao": "Operações & Supply Chain", "sen": "Diretor/VP", "setor": "Logística", "grau": "2º", "icp": "Baixa"}, {"nome": "Gabriel Moraes de Outeiro", "funcao": "Jurídico & Compliance", "sen": "Diretor/VP", "setor": "Jurídico/ESG/Academia", "grau": "1º", "icp": "Média"}, {"nome": "Henrique Assunção Paim", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Construção/Finanças", "grau": "1º", "icp": "Alta"}, {"nome": "Antonio Torquato", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Joao Marcos de Paula Souza", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "Multissetorial", "grau": "1º", "icp": "Baixa"}, {"nome": "Rodolfo Spigai", "funcao": "Jurídico & Compliance", "sen": "Sócio/Fundador", "setor": "Jurídico/Consultoria", "grau": "1º", "icp": "Média"}, {"nome": "Joao Biarari", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Tech", "grau": "1º", "icp": "Média"}, {"nome": "Luis Alves", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Andre Brigagão Sant'Anna", "funcao": "Finanças & Controladoria", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Alta"}, {"nome": "Mutlu Kurt", "funcao": "TI/Tecnologia & IA", "sen": "Sócio/Fundador", "setor": "Tech", "grau": "1º", "icp": "Baixa"}, {"nome": "Juarez Pereira de Araújo", "funcao": "Vendas & Comercial", "sen": "Sócio/Fundador", "setor": "Tech (DBACorp)", "grau": "1º", "icp": "Média"}, {"nome": "Fábio Braz", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "Engenharia", "grau": "1º", "icp": "Média"}, {"nome": "Marco Poyares", "funcao": "Vendas & Comercial", "sen": "Especialista/Analista", "setor": "Multissetorial", "grau": "1º", "icp": "Baixa"}, {"nome": "Marcelo Poletti", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Agronegócio", "grau": "1º", "icp": "Alta"}, {"nome": "Julio C.S. Marques", "funcao": "CEO/GM & Conselho", "sen": "C-Level/Board", "setor": "Governança", "grau": "1º", "icp": "Média"}, {"nome": "Jonas Moura", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Indústria/Náutica", "grau": "1º", "icp": "Alta"}, {"nome": "Lismara Kömel", "funcao": "Jurídico & Compliance", "sen": "Diretor/VP", "setor": "Jurídico/Tributário", "grau": "1º", "icp": "Alta"}, {"nome": "Luiz Giacomini", "funcao": "Finanças & Controladoria", "sen": "Diretor/VP", "setor": "Tesouraria", "grau": "1º", "icp": "Alta"}, {"nome": "MARCOS PAULO", "funcao": "Vendas & Comercial", "sen": "Diretor/VP", "setor": "Varejo", "grau": "1º", "icp": "Média"}, {"nome": "Murilo Cesar Moro", "funcao": "Tributário & Contábil", "sen": "Gerente/Coord", "setor": "Contabilidade", "grau": "1º", "icp": "Alta"}, {"nome": "Wagner Andrade Junior", "funcao": "CEO/GM & Conselho", "sen": "Sócio/Fundador", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Juliana Burneiko", "funcao": "RH & Pessoas", "sen": "Diretor/VP", "setor": "Seguros (Porto)", "grau": "1º", "icp": "Baixa"}, {"nome": "Mauricio de Moura", "funcao": "Tributário & Contábil", "sen": "Sócio/Fundador", "setor": "Tributário (Grupo Vinde)", "grau": "1º", "icp": "Alta"}, {"nome": "Jeferson Baggio", "funcao": "TI/Tecnologia & IA", "sen": "Diretor/VP", "setor": "Tech/Inovação", "grau": "1º", "icp": "Baixa"}, {"nome": "Marcio Oliveira", "funcao": "CEO/GM & Conselho", "sen": "C-Level/Board", "setor": "Multissetorial", "grau": "1º", "icp": "Média"}, {"nome": "Altemar Coelho", "funcao": "Investidores & Capital", "sen": "Diretor/VP", "setor": "Banco/Crédito", "grau": "1º", "icp": "Média"}, {"nome": "Sergio Costantini", "funcao": "Investidores & Capital", "sen": "Diretor/VP", "setor": "Bancos/Advisory", "grau": "1º", "icp": "Média"}, {"nome": "Guilherme Artiles", "funcao": "Vendas & Comercial", "sen": "Sócio/Fundador", "setor": "Varejo/Tech", "grau": "1º", "icp": "Média"}];
+let inscDrawn=false, sortKI="icp", sortDirI=1;
+const PAL=['#1C5A63','#4F8A6A','#BE9A4C','#B05C46','#3A4F55','#6B7E83','#8AA0A4','#A5B5A0','#C9A86A','#7E5C6B','#5E7C84','#9C8654','#8B9DA0'];
+const ORD={'Alta':3,'Média':2,'Baixa':1};
+function cnt(arr,k){const m={};arr.forEach(d=>m[d[k]]=(m[d[k]]||0)+1);return Object.entries(m).sort((a,b)=>b[1]-a[1]);}
+function showTab(t){
+  const leads=t==='leads';
+  document.getElementById('viewLeads').style.display=leads?'block':'none';
+  document.getElementById('viewInscritos').style.display=leads?'none':'block';
+  document.getElementById('tabLeads').classList.toggle('active',leads);
+  document.getElementById('tabInsc').classList.toggle('active',!leads);
+  if(!leads&&!inscDrawn){drawInsc();inscDrawn=true;}
+}
+function drawInsc(){
+  if(typeof Chart==='undefined')return;
+  Chart.defaults.color='#6B7E83';Chart.defaults.font.family="-apple-system,Segoe UI,Roboto,sans-serif";
+  const n=INSC.length;
+  const dec=INSC.filter(d=>['C-Level/Board','Sócio/Fundador','Diretor/VP'].includes(d.sen)).length;
+  const alta=INSC.filter(d=>d.icp==='Alta').length;
+  const g1=INSC.filter(d=>d.grau==='1º').length;
+  document.getElementById('cardsInsc').innerHTML=
+    '<div class="card"><div class="cl">Inscritos</div><div class="cv">'+n+'</div></div>'+
+    '<div class="card"><div class="cl">Decisores</div><div class="cv">'+Math.round(dec/n*100)+'%</div></div>'+
+    '<div class="card"><div class="cl">Relevância alta</div><div class="cv" style="color:var(--verde)">'+alta+'</div></div>'+
+    '<div class="card"><div class="cl">Conexão 1º grau</div><div class="cv">'+Math.round(g1/n*100)+'%</div></div>';
+  const grid={color:'#DBE1DF'};
+  const f=cnt(INSC,'funcao');
+  new Chart(cFunc,{type:'bar',data:{labels:f.map(x=>x[0]),datasets:[{data:f.map(x=>x[1]),backgroundColor:PAL,borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid,ticks:{precision:0}},y:{grid:{display:false}}}}});
+  const s=cnt(INSC,'sen');
+  new Chart(cSen,{type:'bar',data:{labels:s.map(x=>x[0]),datasets:[{data:s.map(x=>x[1]),backgroundColor:'#1C5A63',borderRadius:4}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid,ticks:{precision:0}}}}});
+  const ic=[['Alta',INSC.filter(d=>d.icp==='Alta').length],['Média',INSC.filter(d=>d.icp==='Média').length],['Baixa',INSC.filter(d=>d.icp==='Baixa').length]];
+  new Chart(cIcp,{type:'doughnut',data:{labels:ic.map(x=>x[0]),datasets:[{data:ic.map(x=>x[1]),backgroundColor:['#4F8A6A','#BE9A4C','#6B7E83']}]},options:{plugins:{legend:{position:'right'}}}});
+  const setm={};INSC.forEach(d=>{let s=d.setor.toLowerCase(),g;
+    if(s.includes('tribut')||s.includes('contab'))g='Tributário/Contábil';
+    else if(s.includes('consult'))g='Consultoria';
+    else if(/tech|sap|software|fintech|saas/.test(s))g='Tecnologia/Fintech';
+    else if(/energia|óleo/.test(s))g='Energia/Óleo&Gás';
+    else if(/finan|wealth|crédito|banco|private|fidc|tesour|equity|venture|invest|capital|funding/.test(s))g='Serviços Financeiros';
+    else if(/indúst|engenharia|embalag|náutica/.test(s))g='Indústria/Engenharia';
+    else if(/varejo|distribui|mro/.test(s))g='Varejo/Distribuição';
+    else if(/logíst|transporte|supply|comex/.test(s))g='Logística/Supply Chain';
+    else if(s.includes('agro'))g='Agronegócio';
+    else if(/constru|imobil|incorpor/.test(s))g='Construção/Imobiliário';
+    else if(s.includes('telecom'))g='Telecom';
+    else if(/marketing|mídia|gráf/.test(s))g='Marketing/Mídia';
+    else if(/hotel|hospital/.test(s))g='Hotelaria';
+    else if(/farma|aliment/.test(s))g='Bens de Consumo/Farma';
+    else if(s.includes('jurídico'))g='Jurídico';
+    else if(s.includes('multissetorial'))g='Multissetorial';
+    else g='Outros';
+    setm[g]=(setm[g]||0)+1;});
+  const st=Object.entries(setm).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  new Chart(cSet,{type:'bar',data:{labels:st.map(x=>x[0]),datasets:[{data:st.map(x=>x[1]),backgroundColor:'#4F8A6A',borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid,ticks:{precision:0}},y:{grid:{display:false}}}}});
+  const al=cnt(INSC.filter(d=>d.icp==='Alta'),'funcao');
+  new Chart(cAlta,{type:'bar',data:{labels:al.map(x=>x[0]),datasets:[{data:al.map(x=>x[1]),backgroundColor:'#4F8A6A',borderRadius:4}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid,ticks:{precision:0}}}}});
+  [...new Set(INSC.map(d=>d.funcao))].sort().forEach(v=>fFunc.add(new Option(v,v)));
+  renderInsc();
+}
+function renderInsc(){
+  const q=(document.getElementById('buscaI').value||'').toLowerCase();
+  const ff=document.getElementById('fFunc').value, fi=document.getElementById('fIcp').value;
+  let r=INSC.filter(d=>(!q||d.nome.toLowerCase().includes(q))&&(!ff||d.funcao===ff)&&(!fi||d.icp===fi));
+  r.sort((a,b)=>{let x=a[sortKI],y=b[sortKI];if(sortKI==='icp'){x=ORD[x];y=ORD[y];}if(x<y)return -sortDirI;if(x>y)return sortDirI;return 0;});
+  document.getElementById('countI').textContent=r.length+' de '+INSC.length;
+  const cls=i=>'icp-'+i.replace('é','e');
+  document.getElementById('tbodyI').innerHTML=r.map(d=>'<tr><td>'+d.nome+'</td><td>'+d.funcao+'</td><td>'+d.sen+'</td><td>'+d.setor+'</td><td>'+d.grau+'</td><td><span class="icp '+cls(d.icp)+'">'+d.icp+'</span></td></tr>').join('');
+}
+document.querySelectorAll('th[data-ki]').forEach(th=>th.onclick=()=>{const k=th.dataset.ki;if(sortKI===k)sortDirI*=-1;else{sortKI=k;sortDirI=1;}renderInsc();});
+function exportInsc(){
+  const cols=['nome','funcao','sen','setor','grau','icp'];
+  const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const lines=[cols.join(',')].concat(INSC.map(l=>cols.map(c=>esc(l[c])).join(',')));
+  const blob=new Blob(["\ufeff"+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='inscritos-newsletter.csv';a.click();
+}
+</script>
+</body>
+</html>
