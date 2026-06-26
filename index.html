@@ -132,6 +132,7 @@
   .gate.hidden{display:none}
   .glock{width:26px;height:26px;color:var(--ink-3)}
   .gtxt{font-size:13px;color:var(--ink-2);font-weight:600;max-width:230px;line-height:1.4}
+  .geyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:700}
   .modal{position:fixed;inset:0;background:rgba(20,40,46,.55);display:none;align-items:center;justify-content:center;
     padding:20px;z-index:60}
   .modal.on{display:flex}
@@ -151,6 +152,19 @@
   .rc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
   .rc-x{background:none;border:none;font-size:24px;color:var(--ink-3);cursor:pointer;line-height:1;padding:0 4px}
   .rc-risk{font-family:var(--disp);font-size:14px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-bottom:16px}
+  .rc-matrix{display:flex;gap:8px;margin:4px 0 12px}
+  .rc-yaxis{writing-mode:vertical-rl;transform:rotate(180deg);font-size:10.5px;color:var(--ink-2);display:flex;align-items:center;justify-content:center}
+  .rc-gw{flex:1}
+  .rc-grid{display:grid;grid-template-columns:62px 1fr 1fr 1fr;gap:5px}
+  .rc-rl{display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:10.5px;color:var(--ink-3)}
+  .rc-cl{display:flex;align-items:center;justify-content:center;font-size:10.5px;color:var(--ink-3)}
+  .rc-cell{min-height:56px;border-radius:8px;border:1px solid var(--panel-line);position:relative}
+  .rc-xaxis{text-align:center;font-size:10.5px;color:var(--ink-2);margin-top:5px}
+  .rc-mk{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+  .rc-dot{width:13px;height:13px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 4px #fff}
+  .rc-mkl{font-size:10px;color:var(--ink);font-weight:600;white-space:nowrap}
+  .rc-zone{text-align:center;margin-bottom:14px}
+  .rc-zone span{font-size:12px;padding:5px 14px;border-radius:8px;font-weight:600;display:inline-block}
   .rc-tiles{display:flex;gap:14px;margin-bottom:14px}
   @media(max-width:520px){.rc-tiles{flex-direction:column}}
   .rc-tile{flex:1;background:var(--panel);border:1px solid var(--panel-line);border-radius:12px;padding:16px 14px}
@@ -265,7 +279,7 @@
             <div class="risknote" id="risknote"></div>
             <div class="cta" id="cta" style="display:none">
               <div class="ctah">O retrato é uma estimativa rápida. Na conversa, um especialista mede o impacto real e monta o plano para margem e caixa até 2027.</div>
-              <button class="btn btn-primary" onclick="bookCall()">Agendar conversa com um especialista</button>
+              <button class="btn btn-primary" onclick="bookCall()">Agendar conversa com o nosso especialista</button>
               <div class="rc-fine">30 minutos, sem compromisso.</div>
               <button class="btn btn-ghost" onclick="window.print()">Baixar resumo</button>
             </div>
@@ -273,8 +287,9 @@
           </div>
           <div class="gate" id="gate">
             <svg class="glock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
-            <div class="gtxt" id="gtxt">Responda para liberar seu relatório</div>
-            <button class="btn btn-primary" id="unlockBtn" style="display:none;width:auto;padding:11px 24px" onclick="openGate()">Liberar meu relatório</button>
+            <div class="geyebrow" id="geyebrow" style="display:none">Seu resultado está pronto</div>
+            <div class="gtxt" id="gtxt">Responda para liberar seu resultado</div>
+            <button class="btn btn-primary" id="unlockBtn" style="display:none;width:auto;padding:11px 24px" onclick="openGate()">Acesse a sua exposição</button>
           </div>
         </div>
       </div>
@@ -288,13 +303,13 @@
 
 <div class="modal" id="emailModal" onclick="if(event.target===this)closeModal()">
   <div class="modalcard">
-    <div class="mlsec">Seu resultado</div>
-    <h3>Veja o impacto da Reforma nos seus números.</h3>
-    <p class="msub">Informe seu e-mail para liberar o resultado completo agora.</p>
+    <div class="mlsec">Seu resultado está pronto</div>
+    <h3>Acesse a sua exposição</h3>
+    <p class="msub">Informe seu e-mail para liberar agora a leitura do seu resultado: o seu nível de risco em cada frente e onde mais aperta no seu negócio.</p>
     <input type="email" id="leadEmail" placeholder="seu melhor e-mail" autocomplete="email" onkeydown="if(event.key==='Enter')submitLead()">
     <div class="merr" id="merr"></div>
     <button class="btn btn-primary" onclick="submitLead()">Liberar meu resultado</button>
-    <div class="mfine">Sem spam. Usamos seu e-mail apenas para falar com você sobre o seu resultado.</div>
+    <div class="mfine">Sem spam. Usamos seu e-mail só para liberar o resultado e, se fizer sentido, dar o próximo passo.</div>
   </div>
 </div>
 
@@ -304,16 +319,35 @@
       <div class="mlsec">Seu Termômetro da Reforma</div>
       <button class="rc-x" onclick="closeReport()" aria-label="Fechar">&times;</button>
     </div>
-    <div class="rc-risk" id="rcRisk"></div>
+    <div class="rc-matrix">
+      <div class="rc-yaxis">Vulnerabilidade do seu negócio</div>
+      <div class="rc-gw">
+        <div class="rc-grid" id="rcGrid">
+          <div class="rc-rl">Alto</div>
+          <div class="rc-cell" data-x="0" data-y="2" style="background:rgba(190,154,76,.18)"></div>
+          <div class="rc-cell" data-x="1" data-y="2" style="background:rgba(176,92,70,.16)"></div>
+          <div class="rc-cell" data-x="2" data-y="2" style="background:rgba(176,92,70,.16)"></div>
+          <div class="rc-rl">Moderado</div>
+          <div class="rc-cell" data-x="0" data-y="1" style="background:rgba(79,138,106,.16)"></div>
+          <div class="rc-cell" data-x="1" data-y="1" style="background:rgba(190,154,76,.18)"></div>
+          <div class="rc-cell" data-x="2" data-y="1" style="background:rgba(176,92,70,.16)"></div>
+          <div class="rc-rl">Baixo</div>
+          <div class="rc-cell" data-x="0" data-y="0" style="background:rgba(79,138,106,.16)"></div>
+          <div class="rc-cell" data-x="1" data-y="0" style="background:rgba(79,138,106,.16)"></div>
+          <div class="rc-cell" data-x="2" data-y="0" style="background:rgba(190,154,76,.18)"></div>
+        </div>
+        <div class="rc-grid"><div></div><div class="rc-cl">Baixo</div><div class="rc-cl">Moderado</div><div class="rc-cl">Alto</div></div>
+        <div class="rc-xaxis">Impacto na margem e no caixa</div>
+      </div>
+    </div>
+    <div class="rc-zone" id="rcZone"></div>
     <div class="rc-tiles">
       <div class="rc-tile"><div class="impl">Perda permanente na margem</div><div class="rc-v" id="rcMar">—</div><div class="impd" id="rcMarD"></div></div>
       <div class="rc-tile"><div class="impl">Aumento na necessidade de capital de giro</div><div class="rc-v" id="rcCai">—</div><div class="impd">uma vez · split payment</div></div>
     </div>
     <div class="rc-fc"><div class="fcl">Efeito no caixa livre em 2027</div><div class="rc-fcv" id="rcFc">—</div></div>
-    <div class="rc-ctah">O retrato acima é uma estimativa rápida. Em 30 minutos, um especialista mede o impacto real na sua margem e no seu caixa, e monta com você o plano para proteger os dois até 2027.</div>
-    <button class="btn btn-primary rc-book" onclick="bookCall()">Agendar conversa com um especialista</button>
-    <div class="rc-fine">30 minutos, sem compromisso.</div>
-    <button class="rc-close" onclick="closeReport()">Fechar e ver no painel</button>
+    <div class="rc-ctah" id="rcCtah"></div>
+    <button class="btn btn-primary rc-book" onclick="bookCall()">Agendar conversa com o nosso especialista</button>
   </div>
 </div>
 
@@ -571,14 +605,16 @@ function updateGate(complete){
   document.getElementById('cta').style.display='none';
   report.classList.add('blurred');
   gate.classList.remove('hidden');
+  const geyebrow=document.getElementById('geyebrow');
   if(complete){
     if(!reportReadyFired){reportReadyFired=true;track('report_ready',{});}
-    gtxt.textContent='Seu relatório está pronto.';
+    geyebrow.style.display='block';gtxt.style.display='none';
     unlockBtn.style.display='inline-block';
   }else{
+    geyebrow.style.display='none';gtxt.style.display='block';
     unlockBtn.style.display='none';
     const remaining=totalQ-Object.keys(answers).length;
-    if(remaining>0) gtxt.textContent=`Faltam ${remaining} ${remaining===1?'resposta':'respostas'} para liberar seu relatório.`;
+    if(remaining>0) gtxt.textContent=`Faltam ${remaining} ${remaining===1?'resposta':'respostas'} para liberar seu resultado.`;
     else gtxt.textContent='Complete o contexto da empresa para liberar.';
   }
 }
@@ -595,12 +631,29 @@ function submitLead(){
 }
 function renderBigReport(){
   const g=parseInt(document.getElementById('score').textContent,10)||0;
-  const lv=g>=67?['Exposição alta','var(--vermelho)']:g>=34?['Exposição moderada','var(--ambar)']:['Baixa exposição','var(--verde)'];
-  const rk=document.getElementById('rcRisk');rk.textContent=`${lv[0]} · ${g}/100`;rk.style.color=lv[1];
   document.getElementById('rcMar').textContent=document.getElementById('impMarV').textContent;
   document.getElementById('rcMarD').textContent=document.getElementById('impMarD').textContent;
   document.getElementById('rcCai').textContent=document.getElementById('impCaiV').textContent;
   document.getElementById('rcFc').textContent=document.getElementById('fcv').textContent;
+  // matriz: impacto (X) pelos vetores de magnitude; vulnerabilidade (Y) pelos de prontidão e regime
+  const v=i=>{const e=document.getElementById('bv'+i);return e?parseInt(e.textContent,10)||0:0;};
+  const impX=Math.round((v(0)*1.4+v(1)*1.3+v(2)*1.1+v(3)*1.0)/(1.4+1.3+1.1+1.0));
+  const vulY=Math.round((v(4)*0.9+v(5)*0.8)/(0.9+0.8));
+  const third=s=>s>=67?2:s>=34?1:0;
+  const cx=third(impX), cy=third(vulY);
+  const grid=document.getElementById('rcGrid');
+  grid.querySelectorAll('.rc-mk').forEach(e=>e.remove());
+  const cell=grid.querySelector('.rc-cell[data-x="'+cx+'"][data-y="'+cy+'"]');
+  if(cell){const mk=document.createElement('div');mk.className='rc-mk';
+    mk.innerHTML='<span class="rc-dot"></span><span class="rc-mkl">sua empresa</span>';cell.appendChild(mk);}
+  const w=['baixo','moderado','alto'], risk=cx+cy;
+  let zn,zbg,zfg;
+  if(risk>=3){zn='Zona crítica';zbg='rgba(176,92,70,.16)';zfg='var(--vermelho)';}
+  else if(risk===2){zn='Zona de atenção';zbg='rgba(190,154,76,.22)';zfg='#8a6d28';}
+  else{zn='Zona sob controle';zbg='rgba(79,138,106,.16)';zfg='var(--verde)';}
+  document.getElementById('rcZone').innerHTML='<span style="background:'+zbg+';color:'+zfg+'">'+zn+' · impacto '+w[cx]+', vulnerabilidade '+w[cy]+'</span>';
+  const expo=g>=67?'alta':g>=34?'moderada':'baixa';
+  document.getElementById('rcCtah').textContent='O Termômetro apontou uma exposição '+expo+', o suficiente para mexer na sua margem e no seu caixa, e exigir decisões importantes antes de 2027. O próximo passo é uma conversa de 30 minutos, sem compromisso, para olharmos o seu caso de perto e conversar sobre o que essa exposição significa, na prática, para o seu negócio, e o que você deve considerar daqui pra frente.';
 }
 function openReport(){document.getElementById('reportModal').classList.add('on');}
 function closeReport(){document.getElementById('reportModal').classList.remove('on');
