@@ -127,6 +127,10 @@
   .btn-ghost{background:transparent;color:var(--teal);border:1px solid var(--line)}
   .btn-new{background:transparent;color:var(--ink-2);border:1px solid var(--line);font-size:12.5px}
   .disc{font-size:10.5px;color:var(--ink-3);margin-top:14px;font-style:italic;line-height:1.45;max-width:860px}
+  .handoff{font-size:12px;color:var(--ink-2);margin-top:14px;text-align:center;line-height:1.55}
+  .handoff a{color:var(--teal)}
+  .copybtn{background:none;border:none;color:var(--teal);text-decoration:underline;cursor:pointer;
+    font-size:12px;font-family:var(--body);padding:0}
   .empty{padding:34px 20px;text-align:center;color:var(--ink-3);font-size:14px;background:var(--surface);border:1px dashed var(--line);border-radius:12px}
   .empty .btn{margin-top:12px}
   /* gate / modal (mesmo padrão do Termômetro) */
@@ -171,7 +175,7 @@
 <body>
 <div class="wrap">
   <div class="head">
-    <div class="topmeta">EC 132/2023 · LC 214/2025<br><a href="./">← Termômetro da Reforma</a></div>
+    <div class="topmeta">EC 132/2023 · LC 214/2025<br><a href="./">← Termômetro da Reforma</a><br><a href="ferramentas.html">Todas as ferramentas</a></div>
     <a class="eyebrow brand" href="https://eqvalor.com.br" target="_blank" rel="noopener">EQVALOR Tributos ↗</a>
     <h1>Planilha da Transição</h1>
     <p class="lede">A troca de PIS/COFINS, IPI, ICMS e ISS por CBS, IBS e Imposto Seletivo, simulada ano a ano de 2026 a 2033: carga efetiva, créditos, preço de equilíbrio e caixa sob split payment — direto no navegador, sem Excel.</p>
@@ -438,6 +442,7 @@
           <p class="sub" style="max-width:560px;margin:0 auto 14px">A planilha dá a direção; a decisão pede precisão. Em 30 minutos, um especialista valida suas premissas, refina o número com seus dados fiscais e desenha o plano de preço, contratos e caixa até 2033.</p>
           <button class="btn btn-primary" style="max-width:420px;margin:0 auto" onclick="bookCall()">Agendar conversa com o nosso especialista</button>
           <div class="tsub" style="text-align:center;margin-top:8px">30 minutos, sem compromisso.</div>
+          <div class="handoff">Você é contador ou consultor? Indique o <a href="./?utm_source=planilha&utm_medium=handoff">Termômetro da Reforma</a> ao dono do negócio — a exposição estratégica em 15 minutos · <button class="copybtn" onclick="copyTermometro(this)">copiar link para enviar</button></div>
         </div>
         <div class="footrow noprint">
           <button class="btn btn-ghost" onclick="window.print()">Baixar / imprimir relatório</button>
@@ -1044,6 +1049,13 @@ function captureLead(email){
 function bookCall(){
   track('book_click',{});
   if(CONFIG.bookingsUrl)window.open(CONFIG.bookingsUrl,'_blank','noopener');
+}
+function copyTermometro(btn){
+  const url='https://termometro.eqvalor.com.br/?utm_source=planilha&utm_medium=indicacao';
+  const done=()=>{const t=btn.textContent;btn.textContent='link copiado ✓';setTimeout(()=>btn.textContent=t,2500);};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(done).catch(()=>prompt('Copie o link:',url));
+  else prompt('Copie o link:',url);
+  track('handoff_termometro',{});
 }
 
 /* ===== EXPORT / PERSISTÊNCIA ===== */
