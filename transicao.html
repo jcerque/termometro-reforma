@@ -241,8 +241,24 @@
         <div class="f pct"><label>Outros sobre a receita (opcional)</label>
           <input type="number" id="outros" min="0" max="20" step="0.05" placeholder="0" oninput="recalc()">
           <div class="hint">DAS, CPRB e regimes que continuam após a Reforma (fator constante).</div></div>
+        <div class="f pct"><label>Receita hoje em monofásico ou ST (opcional)</label>
+          <input type="number" id="monost" min="0" max="100" step="5" placeholder="0" oninput="recalc()">
+          <div class="hint">PIS/COFINS monofásico e ICMS-ST concentram o tributo no fabricante — por isso sua carga efetiva é baixa hoje. CBS/IBS acabam com esses regimes.</div></div>
       </div>
       <div class="totline">Carga atual total: <b id="cargaAtualTot">—</b></div>
+    </div>
+
+    <div class="card">
+      <h2>Custos, folha e lucro <span style="font-size:13px;color:var(--ink-3);font-weight:400">(para a visão de margem líquida)</span></h2>
+      <p class="sub">Com estes dois campos, a planilha fecha a DRE ano a ano — do faturamento ao lucro líquido — e mostra o que a transição faz com a sua margem, incluindo o custo financeiro do split payment. Deixe em branco se quiser só a visão de carga.</p>
+      <div class="grid g3">
+        <div class="f pct"><label>Custos e despesas (sem folha e sem tributos sobre vendas)</label>
+          <input type="number" id="custos" min="0" max="95" step="1" placeholder="0" oninput="recalc()">
+          <div class="hint">CMV/CPV, serviços contratados, despesas gerais e financeiras — % do faturamento. A parcela com nota de PJ do regime regular deve estar também no campo de créditos.</div></div>
+        <div class="f pct"><label>Folha total com encargos (CLT + pró-labore)</label>
+          <input type="number" id="folha" min="0" max="90" step="1" placeholder="0" oninput="recalc()">
+          <div class="hint">Salários, pró-labore, INSS patronal, FGTS e demais encargos — % do faturamento. Folha não gera crédito de CBS/IBS.</div></div>
+      </div>
     </div>
 
     <div class="card">
@@ -265,6 +281,9 @@
         <div class="f pct" id="catCustomWrap" style="display:none"><label>Redução customizada</label>
           <input type="number" id="catCustom" min="0" max="100" step="5" value="0" oninput="recalc()">
           <div class="hint">Ex.: imóveis (venda 50% / locação 70%). Regimes específicos — combustíveis, financeiro, planos de saúde — pedem análise dedicada.</div></div>
+        <div class="f pct" id="pctEnqWrap" style="display:none"><label>% da receita nesse enquadramento</label>
+          <input type="number" id="pctenq" min="0" max="100" step="5" value="100" oninput="recalc()">
+          <div class="hint">O restante é tributado à alíquota cheia. Ex.: supermercado com 40% de cesta básica; farmácia com 70% de medicamentos.</div></div>
       </div>
       <div class="grid g3" style="margin-top:14px">
         <div class="f pct"><label>Imposto Seletivo (se aplicável)</label>
@@ -283,7 +302,7 @@
         <div class="f pct"><label>IBS de referência (2033)</label>
           <input type="number" id="refibs" min="0" max="25" step="0.1" value="17.7" oninput="clearScen();recalc()"></div>
       </div>
-      <div class="disc">As alíquotas de referência serão fixadas por resolução do Senado e recalibradas durante a transição. Em 2026 vigora a fase-teste: CBS 0,9% + IBS 0,1%, compensáveis com PIS/COFINS — quem cumprir as obrigações acessórias fica dispensado do recolhimento.</div>
+      <div class="disc">As alíquotas de referência serão fixadas por resolução do Senado e recalibradas durante a transição. Em 2026 vigora a fase-teste: CBS 0,9% + IBS 0,1%, compensáveis com PIS/COFINS — quem cumprir as obrigações acessórias fica dispensado do recolhimento. A EC 132 prevê avaliação quinquenal com teto de referência de 26,5% (CBS + IBS): se a projeção passar disso, o Poder Executivo deve propor corte de regimes favorecidos.</div>
     </div>
 
     <div class="card">
@@ -339,6 +358,20 @@
           <div class="tblwrap"><table class="matrix" id="memo"></table></div>
           <p class="tsub">Débitos = faturamento × alíquota do ano × (1 − redução do enquadramento). Créditos = compras creditáveis × alíquota padrão do ano. Em 2026, o 1% teste é compensável com PIS/COFINS (efeito líquido zero para quem apura).</p>
         </details>
+      </div>
+      <div class="card" id="dreCard" style="display:none">
+        <h2>Do imposto ao lucro — margem líquida na transição</h2>
+        <p class="sub" id="dreSub"></p>
+        <div class="chartwrap">
+          <div class="tip" id="tip2"></div>
+          <svg id="dreChart" width="100%" viewBox="0 0 980 250" role="img" aria-label="Margem líquida por ano da transição"></svg>
+        </div>
+        <div class="tblwrap" style="margin-top:14px"><table class="matrix" id="dreTbl"></table></div>
+        <p class="tsub" id="dreNotes"></p>
+      </div>
+      <div class="card" id="dreHint" style="display:none">
+        <h2>Quer ver o efeito no seu lucro?</h2>
+        <p class="sub" style="margin-bottom:0">Preencha <b>custos e despesas</b> e <b>folha</b> na aba Premissas e a planilha fecha a DRE ano a ano — do faturamento à margem líquida, incluindo o custo financeiro do split payment. <button class="inline-btn" onclick="showTab('premissas')" type="button">Completar premissas</button></p>
       </div>
       <div class="footrow noprint">
         <button class="btn btn-primary" onclick="showTab('preco')">Preço &amp; repasse →</button>
@@ -464,14 +497,18 @@ function maskMoney(el){
 function S(){
   const cat=$('cat').value;
   const red=cat==='custom'?Math.min(100,Math.max(0,num('catCustom'))):parseFloat(cat);
+  const pctenq=cat==='0'?100:Math.min(100,Math.max(0,num('pctenq')));
   return {
     fat:moneyVal(), regime:$('regime').value, setor:$('setor').value, b2b:num('b2b'),
     piscof:num('piscof'), icms:num('icms'), iss:num('iss'), ipi:num('ipi'), outros:num('outros'),
-    credbase:num('credbase'), red:red/100, is:num('is'),
+    monost:num('monost'), custos:num('custos'), folha:num('folha'),
+    credbase:num('credbase'), red:red/100*pctenq/100, redCat:red/100, pctenq, is:num('is'),
     refcbs:num('refcbs'), refibs:num('refibs'),
     pctprazo:num('pctprazo'), prazodias:num('prazodias'), floathoje:num('floathoje'), juro:num('juro')
   };
 }
+/* presunções de IRPJ/CSLL no Lucro Presumido, por setor (base presumida % da receita) */
+const PRESUNCAO={ser:{ir:32,cs:32}, com:{ir:8,cs:12}, ind:{ir:8,cs:12}, mis:{ir:16,cs:20}};
 
 /* ===== MOTOR DE CÁLCULO — cronograma EC 132 / LC 214 ===== */
 function factors(y,s){
@@ -511,8 +548,35 @@ function calc(){
       aliqPad,aliqVenda,teste2026,carga:R?total/R:0});
   }
   const base=rows[0];
-  rows.forEach(r=>{r.delta=r.total-base.total; r.deltaPP=(r.carga-base.carga)*100;});
-  return {s,rows,base};
+  rows.forEach((r,i)=>{
+    r.delta=r.total-base.total; r.deltaPP=(r.carga-base.carga)*100;
+    r.deltaPrev=i>0?r.total-rows[i-1].total:0;
+  });
+  /* ---- DRE simplificada: do faturamento ao lucro líquido ---- */
+  const dreOn=(s.custos+s.folha)>0 && R>0;
+  if(dreOn){
+    const custosR=R*s.custos/100, folhaR=R*s.folha/100;
+    // Presumido: IRPJ/CSLL sobre base presumida (não variam com a carga de consumo)
+    let irpjP=0,csllP=0;
+    if(s.regime==='presumido'){
+      const p=PRESUNCAO[s.setor]||PRESUNCAO.mis;
+      const baseIR=R*p.ir/100;
+      irpjP=0.15*baseIR+0.10*Math.max(0,baseIR-240000);
+      csllP=0.09*R*p.cs/100;
+    }
+    rows.forEach(r=>{
+      r.lair=R-r.total-custosR-folhaR;
+      if(s.regime==='real'){
+        // no Lucro Real, a variação da carga de consumo mexe no lucro e, portanto, no IRPJ/CSLL
+        r.irpj=r.lair>0?0.15*r.lair+0.10*Math.max(0,r.lair-240000):0;
+        r.csll=r.lair>0?0.09*r.lair:0;
+      }else if(s.regime==='presumido'){r.irpj=irpjP;r.csll=csllP;}
+      else{r.irpj=0;r.csll=0;} // Simples: IRPJ/CSLL dentro do DAS (campo Outros)
+      r.ll=r.lair-r.irpj-r.csll;
+      r.margem=r.ll/R;
+    });
+  }
+  return {s,rows,base,dreOn};
 }
 
 /* ===== FORMATAÇÃO ===== */
@@ -549,27 +613,28 @@ function setScen(btn){
 function clearScen(){document.querySelectorAll('#scen button').forEach(b=>b.classList.remove('on'));}
 function catChange(){
   $('catCustomWrap').style.display=$('cat').value==='custom'?'block':'none';
+  $('pctEnqWrap').style.display=$('cat').value==='0'?'none':'block';
 }
 function regimeAlert(){
   $('simplesAlert').classList.toggle('on',$('regime').value==='simples');
 }
 const SUGESTAO={
-  presumido:{ser:{piscof:3.65,icms:0,iss:3.5,ipi:0,credbase:14},
-             com:{piscof:3.65,icms:4.0,iss:0,ipi:0,credbase:60},
-             ind:{piscof:3.65,icms:4.5,iss:0,ipi:1.5,credbase:55},
-             mis:{piscof:3.65,icms:2.5,iss:1.5,ipi:0.5,credbase:40}},
-  real:{ser:{piscof:5.5,icms:0,iss:3.5,ipi:0,credbase:18},
-        com:{piscof:2.8,icms:3.5,iss:0,ipi:0,credbase:65},
-        ind:{piscof:3.5,icms:4.0,iss:0,ipi:1.2,credbase:60},
-        mis:{piscof:4.0,icms:2.5,iss:1.5,ipi:0.4,credbase:45}},
-  simples:{ser:{piscof:3.65,icms:0,iss:3.5,ipi:0,credbase:14},
-           com:{piscof:3.65,icms:4.0,iss:0,ipi:0,credbase:60},
-           ind:{piscof:3.65,icms:4.5,iss:0,ipi:1.5,credbase:55},
-           mis:{piscof:3.65,icms:2.5,iss:1.5,ipi:0.5,credbase:40}}
+  presumido:{ser:{piscof:3.65,icms:0,iss:3.5,ipi:0,credbase:14,custos:42,folha:32},
+             com:{piscof:3.65,icms:4.0,iss:0,ipi:0,credbase:60,custos:74,folha:8},
+             ind:{piscof:3.65,icms:4.5,iss:0,ipi:1.5,credbase:55,custos:64,folha:14},
+             mis:{piscof:3.65,icms:2.5,iss:1.5,ipi:0.5,credbase:40,custos:62,folha:15}},
+  real:{ser:{piscof:5.5,icms:0,iss:3.5,ipi:0,credbase:18,custos:42,folha:32},
+        com:{piscof:2.8,icms:3.5,iss:0,ipi:0,credbase:65,custos:74,folha:8},
+        ind:{piscof:3.5,icms:4.0,iss:0,ipi:1.2,credbase:60,custos:64,folha:14},
+        mis:{piscof:4.0,icms:2.5,iss:1.5,ipi:0.4,credbase:45,custos:62,folha:15}},
+  simples:{ser:{piscof:3.65,icms:0,iss:3.5,ipi:0,credbase:14,custos:42,folha:32},
+           com:{piscof:3.65,icms:4.0,iss:0,ipi:0,credbase:60,custos:74,folha:8},
+           ind:{piscof:3.65,icms:4.5,iss:0,ipi:1.5,credbase:55,custos:64,folha:14},
+           mis:{piscof:3.65,icms:2.5,iss:1.5,ipi:0.5,credbase:40,custos:62,folha:15}}
 };
 function suggest(){
   const p=SUGESTAO[$('regime').value][$('setor').value];
-  ['piscof','icms','iss','ipi','credbase'].forEach(k=>$(k).value=p[k]);
+  ['piscof','icms','iss','ipi','credbase','custos','folha'].forEach(k=>$(k).value=p[k]);
   recalc();
 }
 function loadExample(){
@@ -577,7 +642,8 @@ function loadExample(){
   $('fat').value=(40000000).toLocaleString('pt-BR');
   $('regime').value='presumido'; $('setor').value='mis'; $('b2b').value=60;
   $('piscof').value=3.65; $('icms').value=2.5; $('iss').value=1.5; $('ipi').value=0.5; $('outros').value=0;
-  $('credbase').value=40; $('cat').value='0'; catChange(); $('is').value=0;
+  $('monost').value=0; $('custos').value=62; $('folha').value=15;
+  $('credbase').value=40; $('cat').value='0'; $('pctenq').value=100; catChange(); $('is').value=0;
   $('refcbs').value=8.8; $('refibs').value=17.7;
   document.querySelectorAll('#scen button').forEach((b,i)=>b.classList.toggle('on',i===0));
   $('pctprazo').value=60; $('prazodias').value=45; $('floathoje').value=40; $('juro').value=14;
@@ -588,7 +654,7 @@ function loadExample(){
 /* ===== RENDER ===== */
 function ready(s){return s.fat>0 && (s.piscof+s.icms+s.iss+s.ipi+s.outros)>0;}
 function recalc(){
-  const {s,rows,base}=calc();
+  const {s,rows,base,dreOn}=calc();
   setUnit(s.fat);
   $('cargaAtualTot').textContent=(s.piscof+s.icms+s.iss+s.ipi+s.outros)
     ? fPct(s.piscof+s.icms+s.iss+s.ipi+s.outros)+(s.fat?' · '+fBig(s.fat*(s.piscof+s.icms+s.iss+s.ipi+s.outros)/100)+' / ano':'')
@@ -599,26 +665,38 @@ function recalc(){
     $(p+'-body').style.display=v?'block':'none';
   });
   if(!ok) return;
-  renderKPIs(s,rows,base);
+  renderKPIs(s,rows,base,dreOn);
   renderChart(s,rows,base);
   renderMatrix(s,rows,base);
   renderMemo(s,rows);
+  renderDRE(s,rows,base,dreOn);
   renderPreco(s,rows,base);
   renderCaixa(s,rows);
-  renderRelatorio(s,rows,base);
+  renderRelatorio(s,rows,base,dreOn);
   updateGate();
 }
 
 function kpi(l,v,d,color){return `<div class="kpi"><div class="kl">${l}</div><div class="kv" style="color:${color||'var(--ink)'}">${v}</div><div class="kd">${d}</div></div>`;}
-function renderKPIs(s,rows,base){
+function renderKPIs(s,rows,base,dreOn){
   const y27=rows.find(r=>r.y===2027), y33=rows.find(r=>r.y===2033);
+  const trans=rows.filter(r=>r.y>=2026);
   const pior=rows.slice(1).reduce((a,b)=>b.total>a.total?b:a,rows[1]);
+  const mediaCarga=trans.reduce((a,r)=>a+r.carga,0)/trans.length;
+  const acum=trans.reduce((a,r)=>a+r.delta,0);
   const cDelta=v=>v>0?'var(--vermelho)':v<0?'var(--verde)':'var(--ink)';
-  $('kpis').innerHTML=
+  let html=
     kpi('Carga de hoje (2025)',fPct(base.carga*100),fBig(base.total)+' / ano')+
     kpi('2027 · CBS entra',fSign(y27.delta),fPP(y27.deltaPP)+' vs hoje',cDelta(y27.delta))+
     kpi('2033 · regime pleno',fSign(y33.delta),fPP(y33.deltaPP)+' vs hoje · '+fPct(y33.carga*100)+' de carga',cDelta(y33.delta))+
-    kpi('Ano de maior carga',String(pior.y),fPct(pior.carga*100)+' · '+fBig(pior.total)+' / ano');
+    kpi('Ano de maior carga',String(pior.y),fPct(pior.carga*100)+' · '+fBig(pior.total)+' / ano')+
+    kpi('Carga média na transição',fPct(mediaCarga*100,1),'média 2026–2033 (hoje: '+fPct(base.carga*100,1)+')')+
+    kpi('Efeito acumulado 2026–2033',fSign(acum),'soma dos desvios anuais vs carga de hoje',cDelta(acum));
+  if(dreOn){
+    const m25=rows[0].margem*100, m33=y33.margem*100;
+    html+=kpi('Margem líquida hoje',fPct(m25,1),fBig(rows[0].ll)+' de lucro / ano')+
+          kpi('Margem líquida em 2033',fPct(m33,1),fPP(m33-m25)+' · '+fBig(y33.ll)+' de lucro',cDelta(m25-m33));
+  }
+  $('kpis').innerHTML=html;
 }
 
 /* --- gráfico: barras empilhadas + linha de referência --- */
@@ -702,6 +780,9 @@ function renderMatrix(s,rows,base){
   html+=`<tr><td>Δ vs hoje (${UNITLBL})</td>`+rows.map(r=>{
     const cls=(r.delta>1?'pos':r.delta<-1?'neg':'dim');
     return `<td class="${r.y===2027||r.y===2033?'yhl ':''}${cls}">${r.y===2025?'—':(r.delta>0?'+':r.delta<0?'−':'')+fU(Math.abs(r.delta))}</td>`;}).join('')+'</tr>';
+  html+=`<tr><td>Δ vs ano anterior (${UNITLBL})</td>`+rows.map(r=>{
+    const cls=(r.deltaPrev>1?'pos':r.deltaPrev<-1?'neg':'dim');
+    return `<td class="${r.y===2027||r.y===2033?'yhl ':''}${cls}">${r.y===2025?'—':Math.abs(r.deltaPrev)<=1?'=':(r.deltaPrev>0?'+':'−')+fU(Math.abs(r.deltaPrev))}</td>`;}).join('')+'</tr>';
   html+='</tbody>';
   $('matrix').innerHTML=html;
   const notes=[];
@@ -725,6 +806,76 @@ function renderMemo(s,rows){
   if(s.is>0) html+=line('Imposto Seletivo',r=>r.isv,'sub');
   html+='</tbody>';
   $('memo').innerHTML=html;
+}
+
+/* --- DRE / margem líquida --- */
+function renderDRE(s,rows,base,dreOn){
+  $('dreCard').style.display=dreOn?'block':'none';
+  $('dreHint').style.display=dreOn?'none':'block';
+  if(!dreOn)return;
+  const R=s.fat, cx=caixaRows(s,rows);
+  const fin=y=>{const x=cx.list.find(k=>k.y===y);return x?x.custo:0;};
+  rows.forEach(r=>{r.llAdj=r.ll-fin(r.y);r.margemAdj=r.llAdj/R;});
+  const y33=rows.find(r=>r.y===2033);
+  const regTxt=s.regime==='real'
+    ?'No Lucro Real, IRPJ e CSLL acompanham o lucro: quando a carga de consumo sobe, o lucro cai e IRPJ/CSLL caem junto, amortecendo parte do impacto.'
+    :s.regime==='presumido'
+    ?'No Lucro Presumido, IRPJ e CSLL incidem sobre a base presumida do setor e não diminuem quando a carga de consumo sobe — o aperto cai inteiro na margem.'
+    :'No Simples, IRPJ e CSLL estão dentro do DAS (informe o DAS efetivo no campo “Outros”).';
+  $('dreSub').innerHTML=`Mesma operação, mesmos preços: só a tributação muda. ${regTxt}`;
+  // tabela
+  const head='<thead><tr><th>DRE simplificada ('+UNITLBL+')</th>'+rows.map(r=>`<th class="${r.y===2027||r.y===2033?'yhl':''}">${r.y===2025?'Hoje':r.y}</th>`).join('')+'</tr></thead>';
+  const line=(nome,get,cls='',neg=false)=>`<tr class="${cls}"><td>${nome}</td>`+rows.map(r=>{
+    const v=get(r);const shown=Math.abs(v)<1?'—':(neg?'(':'')+fU(Math.abs(v))+(neg?')':'');
+    return `<td class="${r.y===2027||r.y===2033?'yhl ':''}${Math.abs(v)<1?'dim':''}${!neg&&v<0?' pos':''}">${!neg&&v<0?'−'+fU(Math.abs(v)):shown}</td>`;}).join('')+'</tr>';
+  let html=head+'<tbody>';
+  html+=line('Receita bruta',()=>R,'sub');
+  html+=line('(−) Tributos sobre o consumo',r=>r.total,'sub',true);
+  html+=line('(−) Custos e despesas',()=>R*s.custos/100,'sub',true);
+  html+=line('(−) Folha com encargos',()=>R*s.folha/100,'sub',true);
+  html+=line('(=) Resultado antes de IRPJ/CSLL',r=>r.lair,'grp');
+  html+=line('(−) IRPJ + CSLL',r=>r.irpj+r.csll,'sub',true);
+  html+=line('(=) Lucro líquido',r=>r.ll,'grp');
+  html+=line('(−) Custo financeiro do giro (split payment)',r=>fin(r.y),'sub',true);
+  html+=line('(=) Lucro líquido ajustado',r=>r.llAdj,'total');
+  html+=`<tr><td>Margem líquida ajustada</td>`+rows.map(r=>`<td class="${r.y===2027||r.y===2033?'yhl':''}${r.margemAdj<0?' pos':''}">${fPct(r.margemAdj*100,1)}</td>`).join('')+'</tr>';
+  html+='</tbody>';
+  $('dreTbl').innerHTML=html;
+  const notes=['Premissas constantes: mesma receita, mesmos custos e folha em todos os anos — isola o efeito puramente tributário.'];
+  if(s.regime==='real')notes.push('IRPJ estimado sobre o resultado contábil (15% + adicional de 10% acima de R$ 240 mil/ano), sem adições e exclusões — refine com seu LALUR.');
+  if(s.regime==='presumido'){const p=PRESUNCAO[s.setor]||PRESUNCAO.mis;notes.push(`Base presumida do setor: IRPJ ${p.ir}% e CSLL ${p.cs}% da receita.`);}
+  notes.push('A aba Preço & repasse mostra quanto do aperto pode ser devolvido via preço.');
+  $('dreNotes').textContent=notes.join(' ');
+  // gráfico de linha — margem líquida ajustada
+  const svg=$('dreChart'), W=980, H=250, padL=64, padR=20, padT=24, padB=32;
+  const cw=W-padL-padR, ch=H-padT-padB;
+  const ms=rows.map(r=>r.margemAdj*100);
+  let lo=Math.min(...ms), hi=Math.max(...ms);
+  const span=Math.max(1,hi-lo); lo-=span*0.25; hi+=span*0.25;
+  const xP=i=>padL+cw*(i/(rows.length-1)), yP=v=>padT+ch-(v-lo)/(hi-lo)*ch;
+  let el='';
+  for(let i=0;i<=3;i++){const v=lo+(hi-lo)*i/3,y=yP(v);
+    el+=`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="var(--line-2)"/>`;
+    el+=`<text x="${padL-8}" y="${y+4}" text-anchor="end" font-size="10" fill="var(--ink-3)">${v.toLocaleString('pt-BR',{maximumFractionDigits:1})}%</text>`;}
+  if(lo<0&&hi>0){const y0=yP(0);el+=`<line x1="${padL}" y1="${y0}" x2="${W-padR}" y2="${y0}" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="4 4"/>`;}
+  el+=`<polyline fill="none" stroke="#0092B0" stroke-width="2.5" points="${rows.map((r,i)=>xP(i)+','+yP(r.margemAdj*100)).join(' ')}"/>`;
+  const minI=ms.indexOf(Math.min(...ms));
+  rows.forEach((r,i)=>{
+    el+=`<circle cx="${xP(i)}" cy="${yP(ms[i])}" r="4" fill="#0092B0" stroke="var(--surface)" stroke-width="2" data-i="${i}" class="dpt" style="cursor:pointer"/>`;
+    if(i===0||i===rows.length-1||i===minI||r.y===2027)
+      el+=`<text x="${xP(i)}" y="${yP(ms[i])-11}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--ink-2)">${ms[i].toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}%</text>`;
+    el+=`<text x="${xP(i)}" y="${H-10}" text-anchor="middle" font-size="11" fill="${r.y===2025?'var(--ink)':'var(--ink-3)'}" font-weight="${r.y===2025?'600':'400'}">${r.y}</text>`;
+  });
+  svg.innerHTML=el;
+  const tip=$('tip2'), wrap=svg.parentElement;
+  svg.querySelectorAll('.dpt').forEach(c=>{
+    c.addEventListener('mousemove',e=>{
+      const b=wrap.getBoundingClientRect(), r=rows[+c.dataset.i];
+      tip.innerHTML=`<b>${r.y}</b><br>Lucro líquido ajustado: ${fBig(r.llAdj)}<br>Margem: ${fPct(r.margemAdj*100,1)}`;
+      tip.style.left=(e.clientX-b.left)+'px';tip.style.top=(e.clientY-b.top-12)+'px';tip.style.opacity=1;
+    });
+    c.addEventListener('mouseleave',()=>tip.style.opacity=0);
+  });
 }
 
 /* --- preço --- */
@@ -803,7 +954,7 @@ function renderCaixa(s,rows){
 }
 
 /* --- relatório --- */
-function renderRelatorio(s,rows,base){
+function renderRelatorio(s,rows,base,dreOn){
   const y27=rows.find(r=>r.y===2027), y33=rows.find(r=>r.y===2033);
   const pior=rows.slice(1).reduce((a,b)=>b.total>a.total?b:a,rows[1]);
   const pr=precoRows(s,rows), p33=pr.find(p=>p.y===2033);
@@ -816,12 +967,19 @@ function renderRelatorio(s,rows,base){
     kpi('Preço B2C p/ manter margem (2033)',(p33.consumidor>0?'+':'')+p33.consumidor.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%','CBS/IBS por fora, líquido dos tributos que saem',cD(p33.consumidor))+
     kpi('Degrau de giro em 2027',fBig(d27.degrau),Math.round(cx.antecip)+' dias de antecipação no desembolso',cD(d27.degrau));
   const al=[];
+  if(dreOn){
+    const m25=rows[0].margem*100, m33=y33.margem*100;
+    if(y33.ll<0) al.push(['r',`<b>A transição vira prejuízo:</b> com premissas constantes, o lucro líquido de ${fBig(rows[0].ll)} hoje se torna negativo (${fBig(y33.ll)}) em 2033. Repasse de preço e revisão de cadeia deixam de ser opção e viram condição de sobrevivência.`]);
+    else if(m25-m33>0.5) al.push(['r',`<b>Margem líquida comprimida:</b> de ${fPct(m25,1)} hoje para ${fPct(m33,1)} em 2033 (${fPP(m33-m25)}) — ${fBig(rows[0].ll-y33.ll)} a menos de lucro por ano${s.regime==='presumido'?', e no Presumido o IRPJ/CSLL não caem junto':''}. Veja na aba Preço quanto precisa ser devolvido via preço.`]);
+    else if(m33-m25>0.5) al.push(['v',`<b>Margem líquida melhora:</b> de ${fPct(m25,1)} para ${fPct(m33,1)} em 2033 — a captura depende de não repassar o ganho ao preço antes da hora e de apropriar créditos correntemente.`]);
+  }
+  if(s.monost>=20) al.push(['r',`<b>${fPct(s.monost,0)} da receita hoje em monofásico/ST:</b> o PIS/COFINS monofásico acaba em 2027 e a substituição tributária do ICMS encolhe com ele até sumir em 2033 — essa receita, que hoje quase não gera débito próprio, passa a ser tributada por CBS/IBS por inteiro (com crédito para o cliente B2B). Reprecifique a cadeia com antecedência.`]);
   if(y33.delta>0.005*s.fat) al.push(['r',`<b>Carga sobe na sua operação:</b> ${fSign(y33.delta)} por ano em 2033 (${fPP(y33.deltaPP)}). Sem plano de repasse e revisão de cadeia, isso sai da margem. O pior ano é <b>${pior.y}</b> (${fPct(pior.carga*100,1)} de carga).`]);
   else if(y33.delta<-0.005*s.fat) al.push(['v',`<b>Carga tende a cair:</b> ${fSign(y33.delta)} por ano em 2033 (${fPP(y33.deltaPP)}). A captura desse ganho não é automática — depende de crédito bem apropriado e de segurar o repasse na negociação.`]);
   else al.push(['a',`<b>Carga quase estável no total</b> — mas a composição muda por completo: novos tributos, novas obrigações, split payment. Neutro no ano não significa neutro no caixa nem nos contratos.`]);
   if(s.credbase<25) al.push(['r',`<b>Base de crédito fraca (${fPct(s.credbase,0)} da receita):</b> operações intensivas em folha e pró-labore não geram crédito de CBS/IBS. Reveja a cadeia: PJ regular no lugar de informal, e o que puder migrar de custo sem nota para custo com nota.`]);
   if(rows.some(r=>r.saldoCredor>1)) al.push(['a',`<b>Saldo credor recorrente:</b> seus créditos superam débitos em parte da transição. Dinheiro parado em crédito é caixa — estruture o ressarcimento nos prazos da LC 214 desde o primeiro dia.`]);
-  if(s.red>0) al.push(['a',`<b>Enquadramento com redução de ${fPct(s.red*100,0)}:</b> confirme item a item (NCM/NBS) nos anexos da LC 214 e monitore a regulamentação — enquadramento errado é autuação ou dinheiro deixado na mesa.`]);
+  if(s.redCat>0) al.push(['a',`<b>Enquadramento com redução de ${fPct(s.redCat*100,0)}${s.pctenq<100?' em '+fPct(s.pctenq,0)+' da receita':''}:</b> confirme item a item (NCM/NBS) nos anexos da LC 214 e monitore a regulamentação — enquadramento errado é autuação ou dinheiro deixado na mesa.`]);
   if(s.regime==='simples') al.push(['a',`<b>Simples Nacional:</b> avalie o regime híbrido (IBS/CBS “por fora” do DAS) se os seus clientes forem B2B do regime regular — sem isso, seu cliente perde crédito e seu preço fica artificialmente caro na comparação.`]);
   if(cx.antecip>10&&d27.degrau>0.002*s.fat) al.push(['r',`<b>Split payment pega o seu mix de prazos:</b> desembolso do tributo antecipa ~${Math.round(cx.antecip)} dias. Reserve linha de giro ou reprecifique prazos antes de 2027.`]);
   if(s.b2b<40&&p33.consumidor>1) al.push(['a',`<b>Maioria das vendas em B2C:</b> o repasse ao consumidor final é o mais difícil. Trabalhe elasticidade, mix e posicionamento em 2026, não em 2027.`]);
@@ -857,20 +1015,27 @@ function submitLead(){
 function captureLead(email){
   track('lead_captured',{});
   if(!CONFIG.captureEndpoint)return;
-  const {s,rows}=calc();
+  const {s,rows,dreOn}=calc();
   const y27=rows.find(r=>r.y===2027),y30=rows.find(r=>r.y===2030),y33=rows.find(r=>r.y===2033);
+  const trans=rows.filter(r=>r.y>=2026);
   const aq=(()=>{const p=new URLSearchParams(location.search);const ua=navigator.userAgent||'';
     return {referrer:document.referrer||'',utm_source:p.get('utm_source')||'',utm_medium:p.get('utm_medium')||'',
       utm_campaign:p.get('utm_campaign')||'',utm_term:p.get('utm_term')||'',utm_content:p.get('utm_content')||'',
       landing_url:location.href,device:/Mobi|Android|iPhone|iPad/i.test(ua)?'mobile':'desktop',user_agent:ua};})();
   const payload={email,...aq,empresa:$('razao').value,faturamento:s.fat,regime:s.regime,setor:s.setor,
-    premissas:{piscof:s.piscof,icms:s.icms,iss:s.iss,ipi:s.ipi,outros:s.outros,credbase:s.credbase,
-      reducao:s.red*100,is:s.is,refcbs:s.refcbs,refibs:s.refibs,b2b:s.b2b,
+    premissas:{piscof:s.piscof,icms:s.icms,iss:s.iss,ipi:s.ipi,outros:s.outros,monost:s.monost,
+      custos:s.custos,folha:s.folha,credbase:s.credbase,
+      reducao:s.redCat*100,pct_enquadramento:s.pctenq,is:s.is,refcbs:s.refcbs,refibs:s.refibs,b2b:s.b2b,
       pctprazo:s.pctprazo,prazodias:s.prazodias,floathoje:s.floathoje,juro:s.juro},
     resultados:{carga_hoje:+(rows[0].carga*100).toFixed(2),
       carga_2027:+(y27.carga*100).toFixed(2),delta_2027:Math.round(y27.delta),
       carga_2030:+(y30.carga*100).toFixed(2),
-      carga_2033:+(y33.carga*100).toFixed(2),delta_2033:Math.round(y33.delta)},
+      carga_2033:+(y33.carga*100).toFixed(2),delta_2033:Math.round(y33.delta),
+      carga_media_transicao:+((trans.reduce((a,r)=>a+r.carga,0)/trans.length)*100).toFixed(2),
+      efeito_acumulado:Math.round(trans.reduce((a,r)=>a+r.delta,0)),
+      margem_hoje:dreOn?+(rows[0].margem*100).toFixed(2):null,
+      margem_2033:dreOn?+(y33.margem*100).toFixed(2):null,
+      lucro_2033:dreOn?Math.round(y33.ll):null},
     origem:'planilha-transicao',data:new Date().toLocaleDateString('pt-BR'),ts:new Date().toISOString()};
   const headers={'Content-Type':'application/json'};
   if(CONFIG.supabaseAnonKey){headers['Authorization']='Bearer '+CONFIG.supabaseAnonKey;headers['apikey']=CONFIG.supabaseAnonKey;}
@@ -883,7 +1048,7 @@ function bookCall(){
 
 /* ===== EXPORT / PERSISTÊNCIA ===== */
 function exportCSV(){
-  const {s,rows}=calc();
+  const {s,rows,dreOn}=calc();
   if(!ready(s))return;
   const sep=';', dec=v=>String(Math.round(v)).replace('.',',');
   const lines=[['Tributo (R$/ano)',...rows.map(r=>r.y)].join(sep)];
@@ -897,13 +1062,20 @@ function exportCSV(){
   push('Subtotal novo sistema',r=>r.novo);push('CARGA TOTAL',r=>r.total);
   lines.push(['Carga % receita',...rows.map(r=>(r.carga*100).toFixed(2).replace('.',','))].join(sep));
   lines.push(['Delta vs hoje',...rows.map(r=>dec(r.delta))].join(sep));
+  lines.push(['Delta vs ano anterior',...rows.map(r=>dec(r.deltaPrev))].join(sep));
+  if(dreOn){
+    push('Resultado antes IRPJ/CSLL',r=>r.lair);
+    push('IRPJ + CSLL',r=>r.irpj+r.csll);
+    push('Lucro liquido',r=>r.ll);
+    lines.push(['Margem liquida %',...rows.map(r=>(r.margem*100).toFixed(2).replace('.',','))].join(sep));
+  }
   const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='planilha-transicao-reforma.csv';a.click();URL.revokeObjectURL(a.href);
   track('export_csv',{});
 }
 const LSKEY='planilha-transicao-cenario';
-const FIELDS=['razao','fat','regime','setor','b2b','piscof','icms','iss','ipi','outros','credbase','cat','catCustom','is','refcbs','refibs','pctprazo','prazodias','floathoje','juro'];
+const FIELDS=['razao','fat','regime','setor','b2b','piscof','icms','iss','ipi','outros','monost','custos','folha','credbase','cat','catCustom','pctenq','is','refcbs','refibs','pctprazo','prazodias','floathoje','juro'];
 function saveScenario(){
   const o={};FIELDS.forEach(k=>o[k]=$(k).value);
   try{localStorage.setItem(LSKEY,JSON.stringify(o));alert('Cenário salvo neste navegador.');}catch(e){}
@@ -919,7 +1091,7 @@ function loadScenario(manual){
 }
 function resetAll(){
   FIELDS.forEach(k=>{const e=$(k);if(e.tagName==='SELECT')e.selectedIndex=0;else e.value='';});
-  $('b2b').value=50;$('is').value=0;$('catCustom').value=0;
+  $('b2b').value=50;$('is').value=0;$('catCustom').value=0;$('pctenq').value=100;
   $('refcbs').value=8.8;$('refibs').value=17.7;
   $('pctprazo').value=60;$('prazodias').value=45;$('floathoje').value=40;$('juro').value=14;
   document.querySelectorAll('#scen button').forEach((b,i)=>b.classList.toggle('on',i===0));
