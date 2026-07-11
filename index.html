@@ -290,7 +290,7 @@
               <button class="btn btn-primary" onclick="bookCall()">Agendar conversa com o nosso especialista</button>
               <div class="rc-fine">30 minutos, sem compromisso.</div>
               <button class="btn btn-ghost" onclick="window.print()">Baixar resumo</button>
-              <div class="handoff">Próximo passo técnico: seu contador valida estes números, ano a ano, na <a href="transicao.html?utm_source=termometro&utm_medium=handoff">Planilha da Transição</a> · <button class="copybtn" onclick="copyPlanilha(this)">copiar link para enviar</button></div>
+              <div class="handoff">Próximo passo técnico: seu contador valida estes números, ano a ano, na <a href="transicao.html?convite=termometro&utm_source=termometro&utm_medium=handoff">Planilha da Transição</a> · <button class="copybtn" onclick="copyPlanilha(this)">copiar link-convite para enviar</button></div>
             </div>
             <div class="disc">Estimativa direcional de triagem, com base na LC 214/2025. A conversa precifica com exatidão e monta o plano.</div>
           </div>
@@ -357,7 +357,7 @@
     <div class="rc-fc"><div class="fcl">Efeito no caixa livre em 2027</div><div class="rc-fcv" id="rcFc">—</div></div>
     <div class="rc-ctah" id="rcCtah"></div>
     <button class="btn btn-primary rc-book" onclick="bookCall()">Agendar conversa com o nosso especialista</button>
-    <div class="handoff">Encaminhe ao seu contador: a <a href="transicao.html?utm_source=termometro&utm_medium=handoff">Planilha da Transição</a> valida estes números, tributo a tributo, até 2033 · <button class="copybtn" onclick="copyPlanilha(this)">copiar link para enviar</button></div>
+    <div class="handoff">Encaminhe ao seu contador: a <a href="transicao.html?convite=termometro&utm_source=termometro&utm_medium=handoff">Planilha da Transição</a> valida estes números, tributo a tributo, até 2033 · <button class="copybtn" onclick="copyPlanilha(this)">copiar link-convite para enviar</button></div>
   </div>
 </div>
 
@@ -674,7 +674,7 @@ function bookCall(){
   else alert('Configure CONFIG.bookingsUrl com a URL do Zoho Bookings.');
 }
 function copyPlanilha(btn){
-  const url='https://termometro.eqvalor.com.br/transicao.html?utm_source=termometro&utm_medium=indicacao';
+  const url='https://termometro.eqvalor.com.br/transicao.html?convite=termometro&utm_source=termometro&utm_medium=indicacao';
   const done=()=>{const t=btn.textContent;btn.textContent='link copiado ✓';setTimeout(()=>btn.textContent=t,2500);};
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(done).catch(()=>prompt('Copie o link:',url));
   else prompt('Copie o link:',url);

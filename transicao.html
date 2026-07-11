@@ -44,8 +44,26 @@
   .tab.on{background:var(--surface);color:var(--teal);border-color:var(--line);position:relative}
   .tab.on::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--surface)}
   .tab:hover{color:var(--teal)}
-  .sec{display:none}
+  .sec{display:none;position:relative}
   .sec.on{display:block}
+  /* tranca de acesso aos resultados */
+  .lockblur{filter:blur(7px);opacity:.5;pointer-events:none;user-select:none}
+  @media(prefers-reduced-motion:no-preference){.lockblur{transition:filter .35s ease,opacity .35s ease}}
+  .lockgate{position:absolute;inset:0;z-index:5;display:flex;justify-content:center;align-items:flex-start;padding-top:46px}
+  .lockcard{background:#fff;border:1px solid var(--line);border-radius:16px;max-width:440px;width:100%;
+    padding:26px 26px 22px;text-align:center;box-shadow:0 18px 50px rgba(20,40,46,.14);height:fit-content}
+  .lockcard .glock{width:26px;height:26px;color:var(--ink-3);margin-bottom:6px}
+  .lockcard h3{font-family:var(--disp);font-size:21px;font-weight:700;margin:4px 0 8px;line-height:1.2}
+  .lockcard .lsub{font-size:13px;color:var(--ink-2);line-height:1.5;margin-bottom:16px}
+  .lockcard .btn{display:block;width:100%}
+  .lockdiv{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--ink-3);font-size:11px;
+    letter-spacing:.1em;text-transform:uppercase}
+  .lockdiv::before,.lockdiv::after{content:'';flex:1;height:1px;background:var(--line-2)}
+  .lockcard input{width:100%;padding:12px 14px;border:1px solid var(--panel-line);border-radius:9px;font-size:14.5px;
+    font-family:var(--body);text-align:center;color:var(--ink)}
+  .lockcard input:focus{outline:2px solid var(--teal);outline-offset:1px}
+  .lockcard .merr{min-height:17px}
+  .lockfine{font-size:11px;color:var(--ink-3);margin-top:10px;line-height:1.45}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px}
   .card h2{font-family:var(--disp);font-size:21px;font-weight:600;margin-bottom:4px;letter-spacing:-.01em}
   .card .sub{font-size:13.5px;color:var(--ink-2);margin-bottom:16px;max-width:720px}
@@ -123,6 +141,7 @@
   .tl .td{font-size:13px;color:var(--ink-2);line-height:1.5;max-width:760px}
   .footrow{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
   .btn{border:none;border-radius:9px;padding:12px 18px;font-family:var(--body);font-size:13.5px;font-weight:600;cursor:pointer}
+  a.btn{text-decoration:none}
   .btn-primary{background:var(--teal);color:#fff}
   .btn-ghost{background:transparent;color:var(--teal);border:1px solid var(--line)}
   .btn-new{background:transparent;color:var(--ink-2);border:1px solid var(--line);font-size:12.5px}
@@ -160,7 +179,8 @@
   @media print{
     @page{margin:12mm}
     body{background:#fff}
-    .tabs,.note,.footrow,.gate,.noprint,.topmeta{display:none!important}
+    .tabs,.note,.footrow,.gate,.lockgate,.noprint,.topmeta{display:none!important}
+    .lockblur{filter:blur(7px)!important;opacity:.5!important}
     .wrap{padding:0;max-width:none}
     .sec{display:block!important;page-break-inside:avoid}
     .sec[data-print="skip"]{display:none!important}
@@ -466,6 +486,23 @@
   </div>
 </div>
 
+<!-- cartão de acesso aos resultados (movido via JS para a aba ativa) -->
+<div class="lockgate" id="accessGate" style="display:none">
+  <div class="lockcard">
+    <svg class="glock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+    <div class="mlsec">Seus resultados estão calculados</div>
+    <h3>Libere a simulação completa</h3>
+    <p class="lsub">A Planilha da Transição é liberada pelo <b>Termômetro da Reforma</b> — quem decide a estratégia mede a exposição em 15 minutos e recebe o convite para a equipe técnica.</p>
+    <a class="btn btn-primary" href="./?utm_source=planilha&utm_medium=gate">Começar pelo Termômetro (15 min)</a>
+    <div class="lockdiv">ou</div>
+    <p class="lsub" style="margin-bottom:10px">Contador ou consultor? Libere com o seu e-mail profissional.</p>
+    <input type="email" id="proEmail" placeholder="voce@suaempresa.com.br" autocomplete="email" onkeydown="if(event.key==='Enter')submitProEmail()">
+    <div class="merr" id="proErr"></div>
+    <button class="btn btn-primary" style="background:var(--verde)" onclick="submitProEmail()">Liberar com e-mail profissional</button>
+    <div class="lockfine">Aceitamos apenas e-mail corporativo (domínio da sua empresa ou escritório). Suas premissas ficam salvas neste navegador.</div>
+  </div>
+</div>
+
 <div class="modal" id="emailModal" onclick="if(event.target===this)closeModal()">
   <div class="modalcard">
     <div class="mlsec">Seu relatório está pronto</div>
@@ -607,7 +644,50 @@ function showTab(sec){
   document.querySelectorAll('.sec').forEach(x=>x.classList.remove('on'));
   $('sec-'+sec).classList.add('on');
   window.scrollTo({top:0,behavior:'auto'});
+  applyLock();
   track('tab_'+sec,{});
+}
+
+/* ===== TRANCA DE ACESSO: premissas abertas, resultados por convite ou e-mail profissional ===== */
+const LOCKKEY='planilha-acesso';
+let unlocked=false;
+function initAccess(){
+  try{
+    const p=new URLSearchParams(location.search);
+    if(p.get('convite')){localStorage.setItem(LOCKKEY,'convite:'+p.get('convite'));track('acesso_convite',{});}
+    const st=localStorage.getItem(LOCKKEY);
+    if(st){unlocked=true; if(st.startsWith('email:'))captured=true;}
+  }catch(e){}
+}
+const BODIES={transicao:'tr-body',preco:'pr-body',caixa:'cx-body',relatorio:'re-body'};
+function applyLock(){
+  const gate=$('accessGate');
+  Object.values(BODIES).forEach(id=>$(id).classList.remove('lockblur'));
+  const cur=document.querySelector('.sec.on');
+  const sec=cur?cur.id.replace('sec-',''):'premissas';
+  if(unlocked||sec==='premissas'||!BODIES[sec]){gate.style.display='none';return;}
+  const body=$(BODIES[sec]);
+  if(body.style.display==='none'){gate.style.display='none';return;} // sem premissas: vale o estado vazio
+  body.classList.add('lockblur');
+  cur.appendChild(gate);
+  gate.style.display='flex';
+}
+const FREEMAIL=['gmail.com','googlemail.com','hotmail.com','hotmail.com.br','outlook.com','outlook.com.br','live.com','msn.com','yahoo.com','yahoo.com.br','ymail.com','icloud.com','me.com','mac.com','aol.com','bol.com.br','uol.com.br','terra.com.br','ig.com.br','r7.com','globo.com','globomail.com','oi.com.br','zipmail.com.br','proton.me','protonmail.com','tutanota.com','mail.com','gmx.com','gmx.net','email.com'];
+function isProfessionalEmail(v){
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))return {ok:false,msg:'Informe um e-mail válido.'};
+  const dom=v.split('@')[1].toLowerCase();
+  if(FREEMAIL.includes(dom))return {ok:false,msg:'Use o seu e-mail profissional (domínio da empresa ou do escritório).'};
+  return {ok:true};
+}
+function submitProEmail(){
+  const v=$('proEmail').value.trim(), r=isProfessionalEmail(v);
+  if(!r.ok){$('proErr').textContent=r.msg;return;}
+  $('proErr').textContent='';
+  try{localStorage.setItem(LOCKKEY,'email:'+v);}catch(e){}
+  unlocked=true;captured=true;
+  captureLead(v,'planilha-acesso-direto');
+  track('acesso_email_pro',{});
+  applyLock();updateGate();
 }
 function setScen(btn){
   document.querySelectorAll('#scen button').forEach(b=>b.classList.remove('on'));
@@ -679,6 +759,7 @@ function recalc(){
   renderCaixa(s,rows);
   renderRelatorio(s,rows,base,dreOn);
   updateGate();
+  applyLock();
 }
 
 function kpi(l,v,d,color){return `<div class="kpi"><div class="kl">${l}</div><div class="kv" style="color:${color||'var(--ink)'}">${v}</div><div class="kd">${d}</div></div>`;}
@@ -1017,7 +1098,7 @@ function submitLead(){
   $('merr').textContent='';captured=true;
   captureLead(v);closeModal();updateGate();
 }
-function captureLead(email){
+function captureLead(email,origemOverride){
   track('lead_captured',{});
   if(!CONFIG.captureEndpoint)return;
   const {s,rows,dreOn}=calc();
@@ -1041,7 +1122,7 @@ function captureLead(email){
       margem_hoje:dreOn?+(rows[0].margem*100).toFixed(2):null,
       margem_2033:dreOn?+(y33.margem*100).toFixed(2):null,
       lucro_2033:dreOn?Math.round(y33.ll):null},
-    origem:'planilha-transicao',data:new Date().toLocaleDateString('pt-BR'),ts:new Date().toISOString()};
+    origem:origemOverride||'planilha-transicao',data:new Date().toLocaleDateString('pt-BR'),ts:new Date().toISOString()};
   const headers={'Content-Type':'application/json'};
   if(CONFIG.supabaseAnonKey){headers['Authorization']='Bearer '+CONFIG.supabaseAnonKey;headers['apikey']=CONFIG.supabaseAnonKey;}
   fetch(CONFIG.captureEndpoint,{method:'POST',headers,body:JSON.stringify(payload)}).catch(()=>{});
@@ -1113,7 +1194,7 @@ function resetAll(){
 }
 
 /* ===== INIT ===== */
-catChange();regimeAlert();loadScenario(false);recalc();
+catChange();regimeAlert();initAccess();loadScenario(false);recalc();
 </script>
 </body>
 </html>
