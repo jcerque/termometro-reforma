@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ferramentas da Reforma Tributária · EQVALOR</title>
+<meta name="description" content="Ferramentas gratuitas da EQVALOR para a Reforma Tributária: meça a exposição do seu negócio com o Termômetro e simule a transição 2026–2033 tributo a tributo com a Planilha da Transição.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14282E; --ink-2:#3A4F55; --ink-3:#6B7E83;
+    --paper:#EBEEEC; --surface:#FFFFFF; --line:#D6DEDB; --line-2:#E4EAE7;
+    --teal:#1C5A63; --verde:#4F8A6A; --ambar:#BE9A4C; --vermelho:#B05C46;
+    --panel:#F4F6F4; --panel-2:#FBFBF9; --panel-line:#DBE1DF;
+    --disp:'Bricolage Grotesque',Georgia,serif;
+    --body:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--body);background:var(--paper);color:var(--ink);line-height:1.5;font-size:15px;
+    font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:30px 26px 70px}
+  .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);font-weight:600}
+  a.brand{color:var(--teal);text-decoration:none;display:inline-block}
+  a.brand:hover{text-decoration:underline}
+  .head{position:relative;margin-bottom:26px}
+  .topmeta{position:absolute;right:0;top:4px;text-align:right;font-size:10.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-3);line-height:1.9}
+  .topmeta a{color:var(--teal);text-decoration:none}
+  .topmeta a:hover{text-decoration:underline}
+  h1{font-family:var(--disp);font-size:42px;line-height:1.04;margin:7px 0 11px;font-weight:700;letter-spacing:-.01em}
+  .lede{font-size:17px;color:var(--ink-2);max-width:600px}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:28px}
+  @media(max-width:760px){.cards{grid-template-columns:1fr}}
+  .tool{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:24px 24px 22px;
+    display:flex;flex-direction:column;gap:10px}
+  .tool .who{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--teal)}
+  .tool.tec .who{color:var(--verde)}
+  .tool h2{font-family:var(--disp);font-size:25px;font-weight:700;letter-spacing:-.01em;line-height:1.1}
+  .tool .desc{font-size:14px;color:var(--ink-2);line-height:1.55;flex:1}
+  .tool .meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-3);border-top:1px solid var(--line-2);padding-top:12px}
+  .tool .meta b{color:var(--ink-2);font-weight:600}
+  .btn{display:block;text-align:center;border:none;border-radius:9px;padding:13px;text-decoration:none;
+    font-family:var(--body);font-size:14px;font-weight:600;cursor:pointer;margin-top:4px}
+  .btn-primary{background:var(--teal);color:#fff}
+  .btn-primary:hover{background:#174d55}
+  .tool.tec .btn-primary{background:var(--verde)}
+  .tool.tec .btn-primary:hover{background:#447a5d}
+  .tool.soon{border-style:dashed;background:var(--panel-2)}
+  .tool.soon .who{color:var(--ink-3)}
+  .tool.soon h2{color:var(--ink-2)}
+  .soonlist{font-size:13.5px;color:var(--ink-2);line-height:1.7;margin-top:2px}
+  .soonlist b{color:var(--ink)}
+  .expert{background:var(--panel);border:1px solid var(--panel-line);border-radius:14px;padding:22px 24px;
+    margin-top:22px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+  .expert .et{font-size:14px;color:var(--ink-2);max-width:560px;line-height:1.5}
+  .expert .et b{color:var(--ink);font-family:var(--disp);font-size:16px;display:block;margin-bottom:3px}
+  .expert .btn{margin:0;padding:12px 22px;white-space:nowrap}
+  .foot{margin-top:26px;font-size:11px;color:var(--ink-3);font-style:italic;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="topmeta">EC 132/2023 · LC 214/2025<br><a href="https://eqvalor.com.br" target="_blank" rel="noopener">eqvalor.com.br ↗</a></div>
+    <a class="eyebrow brand" href="https://eqvalor.com.br" target="_blank" rel="noopener">EQVALOR Tributos ↗</a>
+    <h1>Ferramentas da Reforma</h1>
+    <p class="lede">Simuladores gratuitos, direto no navegador, para medir e planejar o efeito da Reforma Tributária na sua empresa. Sem cadastro para começar; seus dados ficam no seu navegador.</p>
+  </div>
+
+  <div class="cards">
+    <div class="tool">
+      <div class="who">Para o dono do negócio · 15 min</div>
+      <h2>Termômetro da Reforma</h2>
+      <div class="desc">Responda sobre a sua operação e veja quanto a Reforma pode pressionar a sua <b>margem</b> e o seu <b>caixa</b> a partir de 2027 — e o quão preparada a empresa está. Termina com um laudo de exposição em seis frentes.</div>
+      <div class="meta"><span><b>Entrega:</b> laudo de exposição</span><span><b>Precisa de:</b> conhecer o próprio negócio</span></div>
+      <a class="btn btn-primary" href="./?utm_source=ferramentas&utm_medium=hub">Medir minha exposição</a>
+    </div>
+
+    <div class="tool tec">
+      <div class="who">Para o contador e o time fiscal · 30 min</div>
+      <h2>Planilha da Transição</h2>
+      <div class="desc">A troca de PIS/COFINS, IPI, ICMS e ISS por CBS, IBS e Imposto Seletivo, simulada <b>ano a ano de 2026 a 2033</b>: carga efetiva, créditos, preço de equilíbrio, capital de giro sob split payment e o efeito na margem líquida.</div>
+      <div class="meta"><span><b>Entrega:</b> simulação completa + relatório</span><span><b>Precisa de:</b> números do DRE</span></div>
+      <a class="btn btn-primary" href="transicao.html?utm_source=ferramentas&utm_medium=hub">Simular a transição</a>
+    </div>
+
+    <div class="tool soon" style="grid-column:1/-1">
+      <div class="who">Em breve</div>
+      <h2>Próximas ferramentas</h2>
+      <div class="soonlist">
+        <b>Checklist de prontidão 2026</b> — ERP, nota fiscal e obrigações acessórias da fase-teste, item a item.<br>
+        <b>Preço de equilíbrio</b> — calculadora de reprecificação por produto, por dentro → por fora.<br>
+        <b>Decisão de regime</b> — Lucro Presumido × Lucro Real × Simples (e o híbrido) sob as novas regras.
+      </div>
+    </div>
+  </div>
+
+  <div class="expert">
+    <div class="et"><b>As ferramentas dão a direção; a decisão pede precisão.</b>Em 30 minutos, um especialista da EQVALOR valida suas premissas com seus dados fiscais e desenha o plano de margem, preço, contratos e caixa até 2033.</div>
+    <a class="btn btn-primary" href="https://calendly.com/21vc/meeting" target="_blank" rel="noopener" onclick="try{window.dataLayer&&window.dataLayer.push({event:'ferramentas_book_click'})}catch(e){}">Agendar conversa</a>
+  </div>
+
+  <div class="foot">Simulações direcionais com base na EC 132/2023 e na LC 214/2025. Não substituem análise fiscal individualizada. EQVALOR Tributos.</div>
+</div>
+</body>
+</html>
