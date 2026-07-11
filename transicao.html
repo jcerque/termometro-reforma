@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planilha da Transição · Reforma Tributária 2026–2033</title>
+<meta name="description" content="Simule ano a ano, de 2026 a 2033, a troca de PIS/COFINS, IPI, ICMS e ISS por CBS, IBS e Imposto Seletivo: carga efetiva, créditos, preço de equilíbrio e caixa sob split payment. Conforme EC 132/2023 e LC 214/2025.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14282E; --ink-2:#3A4F55; --ink-3:#6B7E83;
+    --paper:#EBEEEC; --surface:#FFFFFF; --line:#D6DEDB; --line-2:#E4EAE7;
+    --teal:#1C5A63; --verde:#4F8A6A; --ambar:#BE9A4C; --vermelho:#B05C46;
+    --panel:#F4F6F4; --panel-2:#FBFBF9; --panel-line:#DBE1DF;
+    --c-atual:#B08A3E; --c-cbs:#0092B0; --c-ibs:#48945C; --c-is:#B05C46;
+    --disp:'Bricolage Grotesque',Georgia,serif;
+    --body:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--body);background:var(--paper);color:var(--ink);line-height:1.5;font-size:15px;
+    font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:30px 26px 70px}
+  .disp{font-family:var(--disp)}
+  .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);font-weight:600}
+  a.brand{color:var(--teal);text-decoration:none;display:inline-block}
+  a.brand:hover{text-decoration:underline}
+  .head{position:relative;margin-bottom:22px}
+  .topmeta{position:absolute;right:0;top:4px;text-align:right;font-size:10.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-3);line-height:1.9}
+  .topmeta a{color:var(--teal);text-decoration:none}
+  .topmeta a:hover{text-decoration:underline}
+  h1{font-family:var(--disp);font-size:42px;line-height:1.04;margin:7px 0 11px;font-weight:700;letter-spacing:-.01em}
+  .lede{font-size:17px;color:var(--ink-2);max-width:640px}
+  .note{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:15px 17px;
+    font-size:13.5px;color:var(--ink-2);margin-bottom:20px}
+  .note .sample{color:var(--teal);cursor:pointer;text-decoration:underline;font-weight:500}
+  /* tabs */
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:22px;border-bottom:1px solid var(--line);padding-bottom:0}
+  .tab{border:1px solid var(--line);border-bottom:none;background:var(--panel-2);color:var(--ink-2);
+    font-family:var(--body);font-size:13px;font-weight:600;padding:10px 16px;border-radius:9px 9px 0 0;cursor:pointer}
+  .tab .tn{display:inline-block;font-size:10px;color:var(--ink-3);margin-right:6px;font-weight:700}
+  .tab.on{background:var(--surface);color:var(--teal);border-color:var(--line);position:relative}
+  .tab.on::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--surface)}
+  .tab:hover{color:var(--teal)}
+  .sec{display:none}
+  .sec.on{display:block}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px}
+  .card h2{font-family:var(--disp);font-size:21px;font-weight:600;margin-bottom:4px;letter-spacing:-.01em}
+  .card .sub{font-size:13.5px;color:var(--ink-2);margin-bottom:16px;max-width:720px}
+  .blocklabel{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:0 0 12px}
+  .grid{display:grid;gap:14px}
+  .g4{grid-template-columns:repeat(4,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:1fr 1fr}
+  @media(max-width:760px){.g4,.g3,.g2{grid-template-columns:1fr 1fr}}
+  @media(max-width:520px){.g4,.g3,.g2{grid-template-columns:1fr}}
+  .f label{display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px;font-weight:600}
+  .f input,.f select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);
+    font-family:var(--body);font-size:14px;color:var(--ink)}
+  .f select{cursor:pointer}
+  .f input:focus,.f select:focus{outline:2px solid var(--teal);outline-offset:1px}
+  .f .hint{font-size:11px;color:var(--ink-3);margin-top:5px;line-height:1.35}
+  .f.pct{position:relative}
+  .f.pct::after{content:'%';position:absolute;right:12px;bottom:11px;color:var(--ink-3);font-size:13px;pointer-events:none}
+  .f.pct input{padding-right:28px}
+  .inline-btn{border:1px solid var(--line);background:var(--panel-2);color:var(--teal);border-radius:8px;
+    font-family:var(--body);font-size:12.5px;font-weight:600;padding:9px 14px;cursor:pointer}
+  .inline-btn:hover{border-color:var(--teal)}
+  .scen{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .scen button{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:9px 13px;cursor:pointer;
+    font-family:var(--body);font-size:12.5px;color:var(--ink-2);text-align:left}
+  .scen button b{display:block;color:var(--ink);font-size:13px}
+  .scen button.on{border-color:var(--teal);box-shadow:inset 0 0 0 1px var(--teal);background:#f0f5f4}
+  .alertbox{border:1px solid #E7C7BD;background:#FBF1ED;border-radius:10px;padding:13px 15px;font-size:13px;color:var(--ink-2);margin-top:14px;display:none}
+  .alertbox.on{display:block}
+  .totline{font-size:13px;color:var(--ink-2);margin-top:10px}
+  .totline b{color:var(--ink)}
+  /* KPI */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  @media(max-width:860px){.kpis{grid-template-columns:1fr 1fr}}
+  .kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:15px 16px}
+  .kpi .kl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;line-height:1.4}
+  .kpi .kv{font-family:var(--disp);font-size:24px;font-weight:700;margin:7px 0 2px;line-height:1.05}
+  .kpi .kd{font-size:11.5px;color:var(--ink-2);line-height:1.35}
+  /* chart */
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin-bottom:10px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .legend .lm{width:18px;height:0;border-top:2px dashed var(--ink-3);border-radius:0}
+  .chartwrap{position:relative}
+  .tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;border-radius:8px;padding:8px 11px;
+    font-size:12px;line-height:1.45;opacity:0;transition:opacity .12s;z-index:5;white-space:nowrap;transform:translate(-50%,-100%)}
+  .tip b{font-weight:600}
+  /* planilha (matriz) */
+  .tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+  table.matrix{border-collapse:collapse;width:100%;min-width:920px;font-size:12.5px}
+  .matrix th,.matrix td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line-2);white-space:nowrap}
+  .matrix th{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:600;background:var(--panel-2)}
+  .matrix th:first-child,.matrix td:first-child{text-align:left;position:sticky;left:0;background:var(--surface);min-width:190px}
+  .matrix thead th:first-child{background:var(--panel-2)}
+  .matrix tr.grp td{font-weight:600;background:var(--panel-2)}
+  .matrix tr.grp td:first-child{background:var(--panel-2)}
+  .matrix tr.total td{font-weight:700;background:#EFF4F2;border-top:2px solid var(--line)}
+  .matrix tr.total td:first-child{background:#EFF4F2}
+  .matrix tr.sub td{color:var(--ink-2)}
+  .matrix td.pos{color:var(--vermelho);font-weight:600}
+  .matrix td.neg{color:var(--verde);font-weight:600}
+  .matrix td.dim{color:var(--ink-3)}
+  .matrix .yhl{background:#F2F7F6!important}
+  .tsub{font-size:11.5px;color:var(--ink-3);margin-top:9px;line-height:1.45}
+  details.memo{margin-top:14px}
+  details.memo summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--teal)}
+  details.memo .tblwrap{margin-top:10px}
+  /* alerts / timeline / report */
+  .alert{display:flex;gap:10px;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:9px;font-size:13px;color:var(--ink-2);background:var(--surface)}
+  .alert .ic{flex:0 0 auto;width:9px;height:9px;border-radius:50%;margin-top:5px}
+  .alert.r .ic{background:var(--vermelho)} .alert.a .ic{background:var(--ambar)} .alert.v .ic{background:var(--verde)}
+  .alert b{color:var(--ink)}
+  .tl{border-left:2px solid var(--line);margin-left:8px;padding-left:20px}
+  .tl .ti{position:relative;padding-bottom:16px}
+  .tl .ti::before{content:'';position:absolute;left:-26px;top:4px;width:10px;height:10px;border-radius:50%;background:var(--teal);border:2px solid var(--surface)}
+  .tl .ty{font-family:var(--disp);font-size:15px;font-weight:700}
+  .tl .td{font-size:13px;color:var(--ink-2);line-height:1.5;max-width:760px}
+  .footrow{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+  .btn{border:none;border-radius:9px;padding:12px 18px;font-family:var(--body);font-size:13.5px;font-weight:600;cursor:pointer}
+  .btn-primary{background:var(--teal);color:#fff}
+  .btn-ghost{background:transparent;color:var(--teal);border:1px solid var(--line)}
+  .btn-new{background:transparent;color:var(--ink-2);border:1px solid var(--line);font-size:12.5px}
+  .disc{font-size:10.5px;color:var(--ink-3);margin-top:14px;font-style:italic;line-height:1.45;max-width:860px}
+  .empty{padding:34px 20px;text-align:center;color:var(--ink-3);font-size:14px;background:var(--surface);border:1px dashed var(--line);border-radius:12px}
+  .empty .btn{margin-top:12px}
+  /* gate / modal (mesmo padrão do Termômetro) */
+  .report-wrap{position:relative}
+  .report{transition:filter .35s ease,opacity .35s ease}
+  .report.blurred{filter:blur(7px);opacity:.5;pointer-events:none;user-select:none}
+  @media(prefers-reduced-motion:reduce){.report{transition:none}}
+  .gate{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+    padding-top:70px;gap:11px;text-align:center;z-index:4}
+  .gate.hidden{display:none}
+  .glock{width:26px;height:26px;color:var(--ink-3)}
+  .gtxt{font-size:13px;color:var(--ink-2);font-weight:600;max-width:260px;line-height:1.4}
+  .geyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:700}
+  .modal{position:fixed;inset:0;background:rgba(20,40,46,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:60}
+  .modal.on{display:flex}
+  .modalcard{background:#fff;border-radius:16px;max-width:400px;width:100%;padding:26px 26px 22px;
+    box-shadow:0 24px 60px rgba(0,0,0,.32);text-align:center}
+  .mlsec{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:700}
+  .modalcard h3{font-family:var(--disp);font-size:21px;font-weight:700;margin:8px 0 8px;color:var(--ink);line-height:1.2}
+  .msub{font-size:13px;color:var(--ink-2);line-height:1.45;margin-bottom:16px}
+  .modalcard input{width:100%;padding:13px 14px;border:1px solid var(--panel-line);border-radius:9px;font-size:15px;
+    font-family:var(--body);text-align:center;color:var(--ink)}
+  .modalcard input:focus{outline:2px solid var(--teal);outline-offset:1px}
+  .merr{color:var(--vermelho);font-size:12px;min-height:17px;margin:6px 0 2px}
+  .mfine{font-size:11px;color:var(--ink-3);margin-top:12px;line-height:1.4}
+  .modalcard .btn{display:block;width:100%}
+  @media print{
+    @page{margin:12mm}
+    body{background:#fff}
+    .tabs,.note,.footrow,.gate,.noprint,.topmeta{display:none!important}
+    .wrap{padding:0;max-width:none}
+    .sec{display:block!important;page-break-inside:avoid}
+    .sec[data-print="skip"]{display:none!important}
+    .card{border-color:#ccc;box-shadow:none}
+    .report{filter:none!important;opacity:1!important}
+    .tblwrap{overflow:visible;border-color:#ccc}
+    table.matrix{min-width:0;font-size:10.5px}
+    h1{font-size:30px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="topmeta">EC 132/2023 · LC 214/2025<br><a href="./">← Termômetro da Reforma</a></div>
+    <a class="eyebrow brand" href="https://eqvalor.com.br" target="_blank" rel="noopener">EQVALOR Tributos ↗</a>
+    <h1>Planilha da Transição</h1>
+    <p class="lede">A troca de PIS/COFINS, IPI, ICMS e ISS por CBS, IBS e Imposto Seletivo, simulada ano a ano de 2026 a 2033: carga efetiva, créditos, preço de equilíbrio e caixa sob split payment — direto no navegador, sem Excel.</p>
+  </div>
+
+  <div class="note noprint">Preencha as <b>Premissas</b> com números do seu DRE e navegue pelas abas: a simulação recalcula na hora. Sem tempo? <span class="sample" onclick="loadExample()">Carregue um exemplo preenchido</span>. Seus dados ficam somente no seu navegador.</div>
+
+  <div class="tabs noprint" role="tablist">
+    <button class="tab on" data-sec="premissas" onclick="showTab('premissas')"><span class="tn">01</span>Premissas</button>
+    <button class="tab" data-sec="transicao" onclick="showTab('transicao')"><span class="tn">02</span>Transição ano a ano</button>
+    <button class="tab" data-sec="preco" onclick="showTab('preco')"><span class="tn">03</span>Preço &amp; repasse</button>
+    <button class="tab" data-sec="caixa" onclick="showTab('caixa')"><span class="tn">04</span>Caixa &amp; split payment</button>
+    <button class="tab" data-sec="relatorio" onclick="showTab('relatorio')"><span class="tn">05</span>Relatório executivo</button>
+  </div>
+
+  <!-- ============ 01 PREMISSAS ============ -->
+  <section class="sec on" id="sec-premissas" data-print="skip">
+    <div class="card">
+      <h2>Empresa e receita</h2>
+      <p class="sub">O ponto de partida é o seu DRE de 2025: faturamento e o perfil de quem compra de você.</p>
+      <div class="grid g3">
+        <div class="f" style="grid-column:span 2"><label>Razão social</label>
+          <input type="text" id="razao" placeholder="Razão social da empresa" oninput="recalc()"></div>
+        <div class="f"><label>Faturamento anual (R$)</label>
+          <input type="text" id="fat" inputmode="numeric" placeholder="Ex.: 40.000.000" oninput="maskMoney(this);recalc()">
+          <div class="hint">Receita bruta anual consolidada.</div></div>
+      </div>
+      <div class="grid g3" style="margin-top:14px">
+        <div class="f"><label>Regime tributário atual</label>
+          <select id="regime" onchange="regimeAlert();recalc()">
+            <option value="presumido">Lucro Presumido</option>
+            <option value="real">Lucro Real</option>
+            <option value="simples">Simples Nacional</option>
+          </select></div>
+        <div class="f"><label>Setor predominante</label>
+          <select id="setor" onchange="recalc()">
+            <option value="ser">Serviços</option>
+            <option value="com">Comércio / distribuição</option>
+            <option value="ind">Indústria</option>
+            <option value="mis">Misto</option>
+          </select></div>
+        <div class="f pct"><label>Vendas para empresas do regime regular (B2B)</label>
+          <input type="number" id="b2b" min="0" max="100" step="5" value="50" oninput="recalc()">
+          <div class="hint">Clientes no Lucro Real/Presumido aproveitam o crédito de CBS/IBS. Consumidor final e Simples, não.</div></div>
+      </div>
+      <div class="alertbox" id="simplesAlert"><b>Simples Nacional:</b> o DAS continua existindo após a Reforma e não é substituído por CBS/IBS. Esta planilha simula a operação no <b>regime regular</b> — útil para avaliar a migração (a LC 214 permite ao Simples recolher IBS/CBS “por fora” para transferir crédito cheio ao cliente B2B) ou o crescimento além do teto. Informe abaixo a carga efetiva que a empresa teria no regime regular, ou o DAS efetivo no campo “Outros”.</div>
+    </div>
+
+    <div class="card">
+      <h2>Carga atual sobre vendas <span style="font-size:13px;color:var(--ink-3);font-weight:400">(% do faturamento, líquida de créditos)</span></h2>
+      <p class="sub">Informe a carga <b>efetiva</b> de cada tributo — o que a empresa de fato desembolsa, já descontando créditos, como sai do seu DRE. <button class="inline-btn" onclick="suggest()" type="button">Sugerir pelo regime e setor</button></p>
+      <div class="grid g4">
+        <div class="f pct"><label>PIS/COFINS</label>
+          <input type="number" id="piscof" min="0" max="15" step="0.05" placeholder="0" oninput="recalc()">
+          <div class="hint">Cumulativo: 3,65% · Não-cumulativo: 9,25% menos créditos.</div></div>
+        <div class="f pct"><label>ICMS efetivo</label>
+          <input type="number" id="icms" min="0" max="25" step="0.05" placeholder="0" oninput="recalc()">
+          <div class="hint">Débitos menos créditos, sobre a receita total.</div></div>
+        <div class="f pct"><label>ISS</label>
+          <input type="number" id="iss" min="0" max="5" step="0.05" placeholder="0" oninput="recalc()">
+          <div class="hint">2% a 5% sobre a receita de serviços.</div></div>
+        <div class="f pct"><label>IPI efetivo</label>
+          <input type="number" id="ipi" min="0" max="20" step="0.05" placeholder="0" oninput="recalc()">
+          <div class="hint">Zerado a partir de 2027, exceto Zona Franca de Manaus.</div></div>
+      </div>
+      <div class="grid g4" style="margin-top:14px">
+        <div class="f pct"><label>Outros sobre a receita (opcional)</label>
+          <input type="number" id="outros" min="0" max="20" step="0.05" placeholder="0" oninput="recalc()">
+          <div class="hint">DAS, CPRB e regimes que continuam após a Reforma (fator constante).</div></div>
+        <div class="f pct"><label>Receita hoje em monofásico ou ST (opcional)</label>
+          <input type="number" id="monost" min="0" max="100" step="5" placeholder="0" oninput="recalc()">
+          <div class="hint">PIS/COFINS monofásico e ICMS-ST concentram o tributo no fabricante — por isso sua carga efetiva é baixa hoje. CBS/IBS acabam com esses regimes.</div></div>
+      </div>
+      <div class="totline">Carga atual total: <b id="cargaAtualTot">—</b></div>
+    </div>
+
+    <div class="card">
+      <h2>Custos, folha e lucro <span style="font-size:13px;color:var(--ink-3);font-weight:400">(para a visão de margem líquida)</span></h2>
+      <p class="sub">Com estes dois campos, a planilha fecha a DRE ano a ano — do faturamento ao lucro líquido — e mostra o que a transição faz com a sua margem, incluindo o custo financeiro do split payment. Deixe em branco se quiser só a visão de carga.</p>
+      <div class="grid g3">
+        <div class="f pct"><label>Custos e despesas (sem folha e sem tributos sobre vendas)</label>
+          <input type="number" id="custos" min="0" max="95" step="1" placeholder="0" oninput="recalc()">
+          <div class="hint">CMV/CPV, serviços contratados, despesas gerais e financeiras — % do faturamento. A parcela com nota de PJ do regime regular deve estar também no campo de créditos.</div></div>
+        <div class="f pct"><label>Folha total com encargos (CLT + pró-labore)</label>
+          <input type="number" id="folha" min="0" max="90" step="1" placeholder="0" oninput="recalc()">
+          <div class="hint">Salários, pró-labore, INSS patronal, FGTS e demais encargos — % do faturamento. Folha não gera crédito de CBS/IBS.</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Novo sistema — CBS, IBS e créditos</h2>
+      <p class="sub">No IVA dual o crédito é amplo: toda compra com nota de fornecedor do regime regular gera crédito integral. Folha, pró-labore e compras sem nota, não. Fornecedor do Simples transfere só o que pagou dentro do DAS.</p>
+      <div class="grid g3">
+        <div class="f pct"><label>Compras e custos com direito a crédito</label>
+          <input type="number" id="credbase" min="0" max="95" step="1" placeholder="0" oninput="recalc()">
+          <div class="hint">% do faturamento em mercadorias, insumos, serviços PJ (regime regular), energia, aluguel PJ, frete, TI…</div></div>
+        <div class="f"><label>Enquadramento na LC 214/2025</label>
+          <select id="cat" onchange="catChange();recalc()">
+            <option value="0">Padrão — alíquota cheia</option>
+            <option value="30">Redução de 30% — profissões intelectuais regulamentadas</option>
+            <option value="40">Redução de 40% — hotelaria, bares e restaurantes, parques, agências</option>
+            <option value="60">Redução de 60% — saúde, educação, medicamentos, alimentos, transporte, agro, cultura</option>
+            <option value="100">Alíquota zero — cesta básica nacional, hortifrúti, medicamentos listados</option>
+            <option value="custom">Outro / regime específico (informar %)</option>
+          </select>
+          <div class="hint" id="catHint">Confirme o enquadramento por NCM/NBS nos anexos da LC 214.</div></div>
+        <div class="f pct" id="catCustomWrap" style="display:none"><label>Redução customizada</label>
+          <input type="number" id="catCustom" min="0" max="100" step="5" value="0" oninput="recalc()">
+          <div class="hint">Ex.: imóveis (venda 50% / locação 70%). Regimes específicos — combustíveis, financeiro, planos de saúde — pedem análise dedicada.</div></div>
+        <div class="f pct" id="pctEnqWrap" style="display:none"><label>% da receita nesse enquadramento</label>
+          <input type="number" id="pctenq" min="0" max="100" step="5" value="100" oninput="recalc()">
+          <div class="hint">O restante é tributado à alíquota cheia. Ex.: supermercado com 40% de cesta básica; farmácia com 70% de medicamentos.</div></div>
+      </div>
+      <div class="grid g3" style="margin-top:14px">
+        <div class="f pct"><label>Imposto Seletivo (se aplicável)</label>
+          <input type="number" id="is" min="0" max="30" step="0.5" placeholder="0" value="0" oninput="recalc()">
+          <div class="hint">A partir de 2027, sobre bens e serviços prejudiciais à saúde ou ao meio ambiente. Não gera crédito.</div></div>
+      </div>
+      <div class="blocklabel" style="margin-top:20px">Cenário de alíquotas de referência (CBS + IBS)</div>
+      <div class="scen" id="scen">
+        <button data-cbs="8.8" data-ibs="17.7" class="on" onclick="setScen(this)"><b>Referência oficial · 26,5%</b>Estimativa do Ministério da Fazenda (teto de avaliação da EC 132)</button>
+        <button data-cbs="9.3" data-ibs="18.7" onclick="setScen(this)"><b>Estimativa de mercado · 28,0%</b>Projeções de consultorias e do mercado em 2025</button>
+        <button data-cbs="9.9" data-ibs="19.6" onclick="setScen(this)"><b>Estresse · 29,5%</b>Cenário conservador para teste de sensibilidade</button>
+      </div>
+      <div class="grid g3">
+        <div class="f pct"><label>CBS de referência (2027+)</label>
+          <input type="number" id="refcbs" min="0" max="15" step="0.1" value="8.8" oninput="clearScen();recalc()"></div>
+        <div class="f pct"><label>IBS de referência (2033)</label>
+          <input type="number" id="refibs" min="0" max="25" step="0.1" value="17.7" oninput="clearScen();recalc()"></div>
+      </div>
+      <div class="disc">As alíquotas de referência serão fixadas por resolução do Senado e recalibradas durante a transição. Em 2026 vigora a fase-teste: CBS 0,9% + IBS 0,1%, compensáveis com PIS/COFINS — quem cumprir as obrigações acessórias fica dispensado do recolhimento. A EC 132 prevê avaliação quinquenal com teto de referência de 26,5% (CBS + IBS): se a projeção passar disso, o Poder Executivo deve propor corte de regimes favorecidos.</div>
+    </div>
+
+    <div class="card">
+      <h2>Prazos e caixa</h2>
+      <p class="sub">Com o split payment (LC 214, arts. 31–35), CBS e IBS são separados na liquidação financeira da venda. O desembolso do tributo muda de data — e isso mexe no capital de giro.</p>
+      <div class="grid g4">
+        <div class="f pct"><label>Vendas a prazo / parceladas</label>
+          <input type="number" id="pctprazo" min="0" max="100" step="5" value="60" oninput="recalc()"></div>
+        <div class="f"><label>Prazo médio das vendas a prazo (dias)</label>
+          <input type="number" id="prazodias" min="0" max="360" step="5" value="45" oninput="recalc()"></div>
+        <div class="f"><label>Dias entre a venda e o recolhimento hoje</label>
+          <input type="number" id="floathoje" min="0" max="120" step="5" value="40" oninput="recalc()">
+          <div class="hint">Da emissão da nota até pagar a guia (ICMS/PIS/COFINS ≈ dia 20–25 do mês seguinte ⇒ ~40 dias).</div></div>
+        <div class="f pct"><label>Custo anual do capital de giro</label>
+          <input type="number" id="juro" min="0" max="60" step="0.5" value="14" oninput="recalc()"></div>
+      </div>
+    </div>
+
+    <div class="footrow noprint">
+      <button class="btn btn-primary" onclick="showTab('transicao')">Ver a transição ano a ano →</button>
+      <button class="btn btn-ghost" onclick="saveScenario()">Salvar cenário neste navegador</button>
+      <button class="btn btn-new" onclick="resetAll()">Limpar tudo</button>
+    </div>
+  </section>
+
+  <!-- ============ 02 TRANSIÇÃO ============ -->
+  <section class="sec" id="sec-transicao">
+    <div id="tr-empty" class="empty" style="display:none">Preencha o faturamento e a carga atual na aba <b>Premissas</b> para simular.<br><button class="btn btn-ghost" onclick="loadExample()">Ou carregue o exemplo</button></div>
+    <div id="tr-body">
+      <div class="kpis" id="kpis"></div>
+      <div class="card">
+        <h2>Carga tributária por ano</h2>
+        <p class="sub" id="chartSub">Tributos atuais minguando, CBS e IBS entrando. A linha tracejada é a sua carga de hoje.</p>
+        <div class="legend">
+          <span><i style="background:var(--c-atual)"></i>Tributos atuais (PIS/COFINS, IPI, ICMS, ISS)</span>
+          <span><i style="background:var(--c-cbs)"></i>CBS (líquida de créditos)</span>
+          <span><i style="background:var(--c-ibs)"></i>IBS (líquido de créditos)</span>
+          <span id="legIS" style="display:none"><i style="background:var(--c-is)"></i>Imposto Seletivo</span>
+          <span><i class="lm"></i>Carga de hoje</span>
+        </div>
+        <div class="chartwrap">
+          <div class="tip" id="tip"></div>
+          <svg id="chart" width="100%" viewBox="0 0 980 340" role="img" aria-label="Carga tributária por ano da transição"></svg>
+        </div>
+      </div>
+      <div class="card">
+        <h2>A planilha — tributo a tributo, ano a ano</h2>
+        <p class="sub">Valores anuais em <b id="unitLabel">R$ mil</b>. PIS/COFINS e IPI saem em 2027; ICMS e ISS caem 10 pontos ao ano de 2029 a 2032 e acabam em 2033; CBS e IBS entram no ritmo espelhado.</p>
+        <div class="tblwrap"><table class="matrix" id="matrix"></table></div>
+        <p class="tsub" id="matrixNotes"></p>
+        <details class="memo">
+          <summary>Memória de cálculo do novo sistema (débitos, créditos e saldo credor)</summary>
+          <div class="tblwrap"><table class="matrix" id="memo"></table></div>
+          <p class="tsub">Débitos = faturamento × alíquota do ano × (1 − redução do enquadramento). Créditos = compras creditáveis × alíquota padrão do ano. Em 2026, o 1% teste é compensável com PIS/COFINS (efeito líquido zero para quem apura).</p>
+        </details>
+      </div>
+      <div class="card" id="dreCard" style="display:none">
+        <h2>Do imposto ao lucro — margem líquida na transição</h2>
+        <p class="sub" id="dreSub"></p>
+        <div class="chartwrap">
+          <div class="tip" id="tip2"></div>
+          <svg id="dreChart" width="100%" viewBox="0 0 980 250" role="img" aria-label="Margem líquida por ano da transição"></svg>
+        </div>
+        <div class="tblwrap" style="margin-top:14px"><table class="matrix" id="dreTbl"></table></div>
+        <p class="tsub" id="dreNotes"></p>
+      </div>
+      <div class="card" id="dreHint" style="display:none">
+        <h2>Quer ver o efeito no seu lucro?</h2>
+        <p class="sub" style="margin-bottom:0">Preencha <b>custos e despesas</b> e <b>folha</b> na aba Premissas e a planilha fecha a DRE ano a ano — do faturamento à margem líquida, incluindo o custo financeiro do split payment. <button class="inline-btn" onclick="showTab('premissas')" type="button">Completar premissas</button></p>
+      </div>
+      <div class="footrow noprint">
+        <button class="btn btn-primary" onclick="showTab('preco')">Preço &amp; repasse →</button>
+        <button class="btn btn-ghost" onclick="exportCSV()">Exportar CSV</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 PREÇO ============ -->
+  <section class="sec" id="sec-preco">
+    <div id="pr-empty" class="empty" style="display:none">Preencha as <b>Premissas</b> para simular o preço de equilíbrio.</div>
+    <div id="pr-body">
+      <div class="kpis" id="kpisPreco"></div>
+      <div class="card">
+        <h2>Preço de equilíbrio, ano a ano</h2>
+        <p class="sub">Hoje seus tributos estão embutidos no preço (“por dentro”). CBS e IBS são destacados “por fora”. Para manter a mesma receita líquida por venda, o preço-base muda — e o efeito é diferente para quem toma crédito (B2B) e para o consumidor final.</p>
+        <div class="tblwrap"><table class="matrix" id="precoTbl"></table></div>
+        <p class="tsub">Preço atual = 100. <b>Preço-base</b>: valor da sua nota, sem CBS/IBS. <b>Preço cheio (B2C)</b>: o que o consumidor final desembolsa, com CBS/IBS por fora. <b>Custo líquido B2B</b>: o que custa para um cliente do regime regular, que recupera CBS/IBS como crédito. A conta mantém sua receita líquida por unidade constante e não considera reação de demanda.</p>
+      </div>
+      <div class="card">
+        <h2>Leitura estratégica</h2>
+        <div id="precoInsights"></div>
+      </div>
+      <div class="footrow noprint">
+        <button class="btn btn-primary" onclick="showTab('caixa')">Caixa &amp; split payment →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 CAIXA ============ -->
+  <section class="sec" id="sec-caixa">
+    <div id="cx-empty" class="empty" style="display:none">Preencha as <b>Premissas</b> para simular o efeito no caixa.</div>
+    <div id="cx-body">
+      <div class="kpis" id="kpisCaixa"></div>
+      <div class="card">
+        <h2>Split payment: quando o tributo sai do caixa</h2>
+        <p class="sub" id="cxSub"></p>
+        <div class="tblwrap"><table class="matrix" id="caixaTbl"></table></div>
+        <p class="tsub">Necessidade adicional de giro = (CBS+IBS+IS líquidos do ano ÷ 12) × dias de antecipação ÷ 30. É um degrau: consome caixa uma vez quando a regra muda e cresce conforme as alíquotas sobem na transição. O custo financeiro usa o juro informado nas premissas.</p>
+      </div>
+      <div class="footrow noprint">
+        <button class="btn btn-primary" onclick="showTab('relatorio')">Relatório executivo →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 RELATÓRIO ============ -->
+  <section class="sec" id="sec-relatorio">
+    <div id="re-empty" class="empty" style="display:none">Preencha as <b>Premissas</b> para gerar o relatório.</div>
+    <div id="re-body" class="report-wrap">
+      <div class="report" id="report">
+        <div class="kpis" id="kpisRel"></div>
+        <div class="card">
+          <h2>Alertas do seu cenário</h2>
+          <p class="sub">O que os números desta simulação apontam para <b id="relEmpresa">a sua empresa</b>.</p>
+          <div id="alerts"></div>
+        </div>
+        <div class="card">
+          <h2>Agenda da transição</h2>
+          <div class="tl" id="agenda"></div>
+        </div>
+        <div class="card noprint" style="text-align:center">
+          <h2 style="margin-bottom:8px">O próximo passo</h2>
+          <p class="sub" style="max-width:560px;margin:0 auto 14px">A planilha dá a direção; a decisão pede precisão. Em 30 minutos, um especialista valida suas premissas, refina o número com seus dados fiscais e desenha o plano de preço, contratos e caixa até 2033.</p>
+          <button class="btn btn-primary" style="max-width:420px;margin:0 auto" onclick="bookCall()">Agendar conversa com o nosso especialista</button>
+          <div class="tsub" style="text-align:center;margin-top:8px">30 minutos, sem compromisso.</div>
+        </div>
+        <div class="footrow noprint">
+          <button class="btn btn-ghost" onclick="window.print()">Baixar / imprimir relatório</button>
+          <button class="btn btn-ghost" onclick="exportCSV()">Exportar CSV</button>
+        </div>
+        <div class="disc">Simulação direcional com base na EC 132/2023 e na LC 214/2025, a partir das premissas informadas. As alíquotas de referência ainda serão fixadas por resolução do Senado e recalibradas ao longo da transição; regimes específicos (combustíveis, serviços financeiros, planos de saúde, imóveis, ZFM) têm regras próprias não modeladas aqui. Este material não substitui análise fiscal individualizada.</div>
+      </div>
+      <div class="gate" id="gate">
+        <svg class="glock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="9.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+        <div class="geyebrow">Seu relatório está pronto</div>
+        <div class="gtxt">Informe seu e-mail para liberar o relatório executivo completo, com alertas e agenda da transição.</div>
+        <button class="btn btn-primary" style="width:auto;padding:11px 24px" onclick="openGate()">Liberar relatório</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="footrow noprint" style="margin-top:26px;border-top:1px solid var(--line);padding-top:18px">
+    <button class="btn btn-ghost" onclick="saveScenario()">Salvar cenário</button>
+    <button class="btn btn-ghost" onclick="loadScenario(true)">Recarregar cenário salvo</button>
+    <button class="btn btn-new" onclick="resetAll()">Novo cenário</button>
+  </div>
+</div>
+
+<div class="modal" id="emailModal" onclick="if(event.target===this)closeModal()">
+  <div class="modalcard">
+    <div class="mlsec">Seu relatório está pronto</div>
+    <h3>Liberar o relatório executivo</h3>
+    <p class="msub">Informe seu e-mail para liberar agora os alertas do seu cenário e a agenda da transição até 2033.</p>
+    <input type="email" id="leadEmail" placeholder="seu melhor e-mail" autocomplete="email" onkeydown="if(event.key==='Enter')submitLead()">
+    <div class="merr" id="merr"></div>
+    <button class="btn btn-primary" onclick="submitLead()">Liberar meu relatório</button>
+    <div class="mfine">Sem spam. Usamos seu e-mail só para liberar o relatório e, se fizer sentido, dar o próximo passo.</div>
+  </div>
+</div>
+
+<script>
+/* ===== CONFIGURAÇÃO (mesmo funil do Termômetro) ===== */
+const CONFIG = {
+  captureEndpoint: "https://zjpeyecjtfqwfxhpebpt.supabase.co/functions/v1/capture-lead",
+  supabaseAnonKey: "",
+  bookingsUrl: "https://calendly.com/21vc/meeting"
+};
+function track(ev,data){try{
+  window.dataLayer&&window.dataLayer.push(Object.assign({event:'planilha_'+ev},data||{}));
+  window.gtag&&window.gtag('event','planilha_'+ev,data||{});
+}catch(e){}}
+
+/* ===== ESTADO ===== */
+const YEARS=[2025,2026,2027,2028,2029,2030,2031,2032,2033];
+const $=id=>document.getElementById(id);
+const num=id=>{const v=parseFloat(String($(id).value).replace(',','.'));return isNaN(v)?0:v;};
+function moneyVal(){const d=String($('fat').value).replace(/\D/g,'');return d?parseInt(d,10):0;}
+function maskMoney(el){
+  const d=String(el.value).replace(/\D/g,'');
+  el.value=d?parseInt(d,10).toLocaleString('pt-BR'):'';
+}
+function S(){
+  const cat=$('cat').value;
+  const red=cat==='custom'?Math.min(100,Math.max(0,num('catCustom'))):parseFloat(cat);
+  const pctenq=cat==='0'?100:Math.min(100,Math.max(0,num('pctenq')));
+  return {
+    fat:moneyVal(), regime:$('regime').value, setor:$('setor').value, b2b:num('b2b'),
+    piscof:num('piscof'), icms:num('icms'), iss:num('iss'), ipi:num('ipi'), outros:num('outros'),
+    monost:num('monost'), custos:num('custos'), folha:num('folha'),
+    credbase:num('credbase'), red:red/100*pctenq/100, redCat:red/100, pctenq, is:num('is'),
+    refcbs:num('refcbs'), refibs:num('refibs'),
+    pctprazo:num('pctprazo'), prazodias:num('prazodias'), floathoje:num('floathoje'), juro:num('juro')
+  };
+}
+/* presunções de IRPJ/CSLL no Lucro Presumido, por setor (base presumida % da receita) */
+const PRESUNCAO={ser:{ir:32,cs:32}, com:{ir:8,cs:12}, ind:{ir:8,cs:12}, mis:{ir:16,cs:20}};
+
+/* ===== MOTOR DE CÁLCULO — cronograma EC 132 / LC 214 ===== */
+function factors(y,s){
+  const refC=s.refcbs/100, refI=s.refibs/100;
+  const ii = y<=2028?1 : y===2029?0.9 : y===2030?0.8 : y===2031?0.7 : y===2032?0.6 : 0; // ICMS/ISS
+  const pc = y<=2026?1:0;   // PIS/COFINS (extintos em 2027)
+  const ipi= y<=2026?1:0;   // IPI zerado em 2027 (exceto ZFM)
+  let cbs=0, ibs=0;
+  if(y===2026){cbs=0.009; ibs=0.001;}                                  // fase-teste, compensável
+  else if(y===2027||y===2028){cbs=Math.max(0,refC-0.001); ibs=0.001;}  // CBS cheia −0,1 p.p.; IBS 0,1%
+  else if(y>=2029&&y<=2032){cbs=refC; ibs=refI*(y-2028)/10;}           // IBS 10/20/30/40% da referência
+  else if(y>=2033){cbs=refC; ibs=refI;}                                // regime pleno
+  return {pc,ii,ipi,cbs,ibs};
+}
+function calc(){
+  const s=S(), R=s.fat, rows=[];
+  for(const y of YEARS){
+    const f=factors(y,s);
+    const pisc=R*s.piscof/100*f.pc, icms=R*s.icms/100*f.ii, iss=R*s.iss/100*f.ii,
+          ipi=R*s.ipi/100*f.ipi, outros=R*s.outros/100;
+    const aliqPad=f.cbs+f.ibs;                       // alíquota padrão do ano (compras)
+    const aliqVenda=aliqPad*(1-s.red);               // alíquota sobre suas vendas (com redução)
+    const debCBS=R*f.cbs*(1-s.red), debIBS=R*f.ibs*(1-s.red);
+    const cred=R*(s.credbase/100)*aliqPad;
+    let liq=debCBS+debIBS-cred, saldoCredor=0;
+    if(liq<0){saldoCredor=-liq;liq=0;}
+    let liqCBS=0, liqIBS=0;
+    if(debCBS+debIBS>0){liqCBS=liq*debCBS/(debCBS+debIBS);liqIBS=liq-liqCBS;}
+    const teste2026=(y===2026)?(debCBS+debIBS):0;
+    if(y===2026){liqCBS=0;liqIBS=0;}                 // compensável com PIS/COFINS
+    const isv=(y>=2027)?R*(s.is/100):0;              // Imposto Seletivo, sem crédito
+    const atual=pisc+icms+iss+ipi;
+    const novo=liqCBS+liqIBS+isv;
+    const total=atual+novo+outros;
+    rows.push({y,f,pisc,icms,iss,ipi,outros,atual,
+      debCBS,debIBS,cred,saldoCredor,liqCBS,liqIBS,isv,novo,total,
+      aliqPad,aliqVenda,teste2026,carga:R?total/R:0});
+  }
+  const base=rows[0];
+  rows.forEach((r,i)=>{
+    r.delta=r.total-base.total; r.deltaPP=(r.carga-base.carga)*100;
+    r.deltaPrev=i>0?r.total-rows[i-1].total:0;
+  });
+  /* ---- DRE simplificada: do faturamento ao lucro líquido ---- */
+  const dreOn=(s.custos+s.folha)>0 && R>0;
+  if(dreOn){
+    const custosR=R*s.custos/100, folhaR=R*s.folha/100;
+    // Presumido: IRPJ/CSLL sobre base presumida (não variam com a carga de consumo)
+    let irpjP=0,csllP=0;
+    if(s.regime==='presumido'){
+      const p=PRESUNCAO[s.setor]||PRESUNCAO.mis;
+      const baseIR=R*p.ir/100;
+      irpjP=0.15*baseIR+0.10*Math.max(0,baseIR-240000);
+      csllP=0.09*R*p.cs/100;
+    }
+    rows.forEach(r=>{
+      r.lair=R-r.total-custosR-folhaR;
+      if(s.regime==='real'){
+        // no Lucro Real, a variação da carga de consumo mexe no lucro e, portanto, no IRPJ/CSLL
+        r.irpj=r.lair>0?0.15*r.lair+0.10*Math.max(0,r.lair-240000):0;
+        r.csll=r.lair>0?0.09*r.lair:0;
+      }else if(s.regime==='presumido'){r.irpj=irpjP;r.csll=csllP;}
+      else{r.irpj=0;r.csll=0;} // Simples: IRPJ/CSLL dentro do DAS (campo Outros)
+      r.ll=r.lair-r.irpj-r.csll;
+      r.margem=r.ll/R;
+    });
+  }
+  return {s,rows,base,dreOn};
+}
+
+/* ===== FORMATAÇÃO ===== */
+let UNIT=1e6, UNITLBL='R$ mi', UNITDEC=2;
+function setUnit(fat){
+  if(fat>=20e6){UNIT=1e6;UNITLBL='R$ mi';UNITDEC=2;}
+  else{UNIT=1e3;UNITLBL='R$ mil';UNITDEC=0;}
+}
+const fU=v=>(v/UNIT).toLocaleString('pt-BR',{minimumFractionDigits:UNITDEC,maximumFractionDigits:UNITDEC});
+const fPct=(v,d=2)=>v.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d})+'%';
+const fBig=v=>{
+  const a=Math.abs(v);
+  if(a>=1e6) return 'R$ '+(v/1e6).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+' mi';
+  if(a>=1e3) return 'R$ '+(v/1e3).toLocaleString('pt-BR',{maximumFractionDigits:0})+' mil';
+  return 'R$ '+v.toLocaleString('pt-BR',{maximumFractionDigits:0});
+};
+const fSign=v=>(v>0?'+':v<0?'−':'')+fBig(Math.abs(v)).replace('R$ ','R$ ');
+const fPP=v=>(v>0?'+':v<0?'−':'')+Math.abs(v).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+' p.p.';
+
+/* ===== UI: abas, cenários, sugestões ===== */
+function showTab(sec){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.sec===sec));
+  document.querySelectorAll('.sec').forEach(x=>x.classList.remove('on'));
+  $('sec-'+sec).classList.add('on');
+  window.scrollTo({top:0,behavior:'auto'});
+  track('tab_'+sec,{});
+}
+function setScen(btn){
+  document.querySelectorAll('#scen button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  $('refcbs').value=btn.dataset.cbs; $('refibs').value=btn.dataset.ibs;
+  recalc();
+}
+function clearScen(){document.querySelectorAll('#scen button').forEach(b=>b.classList.remove('on'));}
+function catChange(){
+  $('catCustomWrap').style.display=$('cat').value==='custom'?'block':'none';
+  $('pctEnqWrap').style.display=$('cat').value==='0'?'none':'block';
+}
+function regimeAlert(){
+  $('simplesAlert').classList.toggle('on',$('regime').value==='simples');
+}
+const SUGESTAO={
+  presumido:{ser:{piscof:3.65,icms:0,iss:3.5,ipi:0,credbase:14,custos:42,folha:32},
+             com:{piscof:3.65,icms:4.0,iss:0,ipi:0,credbase:60,custos:74,folha:8},
+             ind:{piscof:3.65,icms:4.5,iss:0,ipi:1.5,credbase:55,custos:64,folha:14},
+             mis:{piscof:3.65,icms:2.5,iss:1.5,ipi:0.5,credbase:40,custos:62,folha:15}},
+  real:{ser:{piscof:5.5,icms:0,iss:3.5,ipi:0,credbase:18,custos:42,folha:32},
+        com:{piscof:2.8,icms:3.5,iss:0,ipi:0,credbase:65,custos:74,folha:8},
+        ind:{piscof:3.5,icms:4.0,iss:0,ipi:1.2,credbase:60,custos:64,folha:14},
+        mis:{piscof:4.0,icms:2.5,iss:1.5,ipi:0.4,credbase:45,custos:62,folha:15}},
+  simples:{ser:{piscof:3.65,icms:0,iss:3.5,ipi:0,credbase:14,custos:42,folha:32},
+           com:{piscof:3.65,icms:4.0,iss:0,ipi:0,credbase:60,custos:74,folha:8},
+           ind:{piscof:3.65,icms:4.5,iss:0,ipi:1.5,credbase:55,custos:64,folha:14},
+           mis:{piscof:3.65,icms:2.5,iss:1.5,ipi:0.5,credbase:40,custos:62,folha:15}}
+};
+function suggest(){
+  const p=SUGESTAO[$('regime').value][$('setor').value];
+  ['piscof','icms','iss','ipi','credbase','custos','folha'].forEach(k=>$(k).value=p[k]);
+  recalc();
+}
+function loadExample(){
+  $('razao').value='Exemplo Distribuidora e Serviços Ltda.';
+  $('fat').value=(40000000).toLocaleString('pt-BR');
+  $('regime').value='presumido'; $('setor').value='mis'; $('b2b').value=60;
+  $('piscof').value=3.65; $('icms').value=2.5; $('iss').value=1.5; $('ipi').value=0.5; $('outros').value=0;
+  $('monost').value=0; $('custos').value=62; $('folha').value=15;
+  $('credbase').value=40; $('cat').value='0'; $('pctenq').value=100; catChange(); $('is').value=0;
+  $('refcbs').value=8.8; $('refibs').value=17.7;
+  document.querySelectorAll('#scen button').forEach((b,i)=>b.classList.toggle('on',i===0));
+  $('pctprazo').value=60; $('prazodias').value=45; $('floathoje').value=40; $('juro').value=14;
+  regimeAlert(); recalc(); showTab('transicao');
+  track('exemplo',{});
+}
+
+/* ===== RENDER ===== */
+function ready(s){return s.fat>0 && (s.piscof+s.icms+s.iss+s.ipi+s.outros)>0;}
+function recalc(){
+  const {s,rows,base,dreOn}=calc();
+  setUnit(s.fat);
+  $('cargaAtualTot').textContent=(s.piscof+s.icms+s.iss+s.ipi+s.outros)
+    ? fPct(s.piscof+s.icms+s.iss+s.ipi+s.outros)+(s.fat?' · '+fBig(s.fat*(s.piscof+s.icms+s.iss+s.ipi+s.outros)/100)+' / ano':'')
+    : '—';
+  const ok=ready(s);
+  [['tr',ok],['pr',ok],['cx',ok],['re',ok]].forEach(([p,v])=>{
+    $(p+'-empty').style.display=v?'none':'block';
+    $(p+'-body').style.display=v?'block':'none';
+  });
+  if(!ok) return;
+  renderKPIs(s,rows,base,dreOn);
+  renderChart(s,rows,base);
+  renderMatrix(s,rows,base);
+  renderMemo(s,rows);
+  renderDRE(s,rows,base,dreOn);
+  renderPreco(s,rows,base);
+  renderCaixa(s,rows);
+  renderRelatorio(s,rows,base,dreOn);
+  updateGate();
+}
+
+function kpi(l,v,d,color){return `<div class="kpi"><div class="kl">${l}</div><div class="kv" style="color:${color||'var(--ink)'}">${v}</div><div class="kd">${d}</div></div>`;}
+function renderKPIs(s,rows,base,dreOn){
+  const y27=rows.find(r=>r.y===2027), y33=rows.find(r=>r.y===2033);
+  const trans=rows.filter(r=>r.y>=2026);
+  const pior=rows.slice(1).reduce((a,b)=>b.total>a.total?b:a,rows[1]);
+  const mediaCarga=trans.reduce((a,r)=>a+r.carga,0)/trans.length;
+  const acum=trans.reduce((a,r)=>a+r.delta,0);
+  const cDelta=v=>v>0?'var(--vermelho)':v<0?'var(--verde)':'var(--ink)';
+  let html=
+    kpi('Carga de hoje (2025)',fPct(base.carga*100),fBig(base.total)+' / ano')+
+    kpi('2027 · CBS entra',fSign(y27.delta),fPP(y27.deltaPP)+' vs hoje',cDelta(y27.delta))+
+    kpi('2033 · regime pleno',fSign(y33.delta),fPP(y33.deltaPP)+' vs hoje · '+fPct(y33.carga*100)+' de carga',cDelta(y33.delta))+
+    kpi('Ano de maior carga',String(pior.y),fPct(pior.carga*100)+' · '+fBig(pior.total)+' / ano')+
+    kpi('Carga média na transição',fPct(mediaCarga*100,1),'média 2026–2033 (hoje: '+fPct(base.carga*100,1)+')')+
+    kpi('Efeito acumulado 2026–2033',fSign(acum),'soma dos desvios anuais vs carga de hoje',cDelta(acum));
+  if(dreOn){
+    const m25=rows[0].margem*100, m33=y33.margem*100;
+    html+=kpi('Margem líquida hoje',fPct(m25,1),fBig(rows[0].ll)+' de lucro / ano')+
+          kpi('Margem líquida em 2033',fPct(m33,1),fPP(m33-m25)+' · '+fBig(y33.ll)+' de lucro',cDelta(m25-m33));
+  }
+  $('kpis').innerHTML=html;
+}
+
+/* --- gráfico: barras empilhadas + linha de referência --- */
+function renderChart(s,rows,base){
+  const svg=$('chart'), W=980, H=340, padL=64, padR=14, padT=26, padB=34;
+  const cw=W-padL-padR, ch=H-padT-padB;
+  const maxV=Math.max(...rows.map(r=>r.total), base.total)*1.15||1;
+  const yPix=v=>padT+ch-(v/maxV)*ch;
+  const n=rows.length, slot=cw/n, bw=Math.min(58,slot*0.62);
+  const COLORS={atual:'var(--c-atual)',cbs:'var(--c-cbs)',ibs:'var(--c-ibs)',is:'var(--c-is)'};
+  const NAMES={atual:'Tributos atuais',cbs:'CBS líquida',ibs:'IBS líquido',is:'Imposto Seletivo'};
+  let el='';
+  // gridlines
+  const steps=4;
+  for(let i=0;i<=steps;i++){
+    const v=maxV*i/steps, y=yPix(v);
+    el+=`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="var(--line-2)" stroke-width="1"/>`;
+    el+=`<text x="${padL-8}" y="${y+4}" text-anchor="end" font-size="10" fill="var(--ink-3)">${fU(v)}</text>`;
+  }
+  el+=`<text x="${padL-8}" y="${padT-12}" text-anchor="end" font-size="10" fill="var(--ink-3)">${UNITLBL}</text>`;
+  // barras
+  rows.forEach((r,i)=>{
+    const x=padL+slot*i+(slot-bw)/2;
+    const segs=[['atual',r.atual+r.outros],['cbs',r.liqCBS],['ibs',r.liqIBS],['is',r.isv]].filter(sg=>sg[1]>0);
+    let acc=0;
+    segs.forEach((sg,si)=>{
+      const v=sg[1], isTop=si===segs.length-1;
+      const yBot=yPix(acc);
+      let yTop=yPix(acc+v)+(isTop?0:2); // espaçador de 2px entre segmentos
+      if(yTop>yBot-0.5)yTop=yBot-0.5;
+      const h=yBot-yTop, seg=`data-y="${r.y}" data-k="${sg[0]}" data-v="${v}" class="seg" style="cursor:pointer"`;
+      if(isTop){
+        const rx=Math.min(4,h/2);
+        el+=`<path d="M${x} ${yBot} L${x} ${yTop+rx} Q${x} ${yTop} ${x+rx} ${yTop} L${x+bw-rx} ${yTop} Q${x+bw} ${yTop} ${x+bw} ${yTop+rx} L${x+bw} ${yBot} Z" fill="${COLORS[sg[0]]}" ${seg}/>`;
+      }else{
+        el+=`<rect x="${x}" y="${yTop}" width="${bw}" height="${h}" fill="${COLORS[sg[0]]}" ${seg}/>`;
+      }
+      acc+=v;
+    });
+    el+=`<text x="${x+bw/2}" y="${yPix(r.total)-7}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--ink-2)">${(r.carga*100).toLocaleString('pt-BR',{maximumFractionDigits:1})}%</text>`;
+    el+=`<text x="${x+bw/2}" y="${H-12}" text-anchor="middle" font-size="11" fill="${r.y===2025?'var(--ink)':'var(--ink-3)'}" font-weight="${r.y===2025?'600':'400'}">${r.y}</text>`;
+  });
+  // linha de referência (carga hoje)
+  const yRef=yPix(base.total);
+  el+=`<line x1="${padL}" y1="${yRef}" x2="${W-padR}" y2="${yRef}" stroke="var(--ink-3)" stroke-width="2" stroke-dasharray="6 5"/>`;
+  svg.innerHTML=el;
+  // tooltip
+  const tip=$('tip'), wrap=svg.parentElement;
+  svg.querySelectorAll('.seg').forEach(p=>{
+    p.addEventListener('mousemove',e=>{
+      const b=wrap.getBoundingClientRect();
+      const r=rows.find(x=>x.y==p.dataset.y);
+      tip.innerHTML=`<b>${p.dataset.y} · ${NAMES[p.dataset.k]}</b><br>${fBig(+p.dataset.v)} · ${fPct(+p.dataset.v/s.fat*100)} da receita<br>Total do ano: ${fBig(r.total)} (${fPct(r.carga*100,1)})`;
+      tip.style.left=(e.clientX-b.left)+'px'; tip.style.top=(e.clientY-b.top-12)+'px'; tip.style.opacity=1;
+    });
+    p.addEventListener('mouseleave',()=>tip.style.opacity=0);
+  });
+  $('legIS').style.display=s.is>0?'inline-flex':'none';
+}
+
+/* --- matriz principal --- */
+function renderMatrix(s,rows,base){
+  $('unitLabel').textContent=UNITLBL;
+  const head='<thead><tr><th>Tributo</th>'+rows.map(r=>`<th class="${r.y===2027||r.y===2033?'yhl':''}">${r.y===2025?'Hoje':r.y}</th>`).join('')+'</tr></thead>';
+  const line=(nome,get,cls='')=>`<tr class="${cls}"><td>${nome}</td>`+rows.map(r=>{
+    const v=get(r); const zero=Math.abs(v)<1;
+    return `<td class="${r.y===2027||r.y===2033?'yhl ':''}${zero?'dim':''}">${zero?'—':fU(v)}</td>`;}).join('')+'</tr>';
+  let html=head+'<tbody>';
+  html+=line('PIS/COFINS',r=>r.pisc,'sub');
+  html+=line('IPI',r=>r.ipi,'sub');
+  html+=line('ICMS',r=>r.icms,'sub');
+  html+=line('ISS',r=>r.iss,'sub');
+  if(s.outros>0) html+=line('Outros (DAS/CPRB…)',r=>r.outros,'sub');
+  html+=line('Sistema atual — subtotal',r=>r.atual+r.outros,'grp');
+  html+=line('CBS (líquida de créditos)',r=>r.liqCBS,'sub');
+  html+=line('IBS (líquido de créditos)',r=>r.liqIBS,'sub');
+  if(s.is>0) html+=line('Imposto Seletivo',r=>r.isv,'sub');
+  html+=line('Novo sistema — subtotal',r=>r.novo,'grp');
+  html+=line('CARGA TOTAL',r=>r.total,'total');
+  html+=`<tr><td>Carga sobre a receita</td>`+rows.map(r=>`<td class="${r.y===2027||r.y===2033?'yhl':''}">${fPct(r.carga*100)}</td>`).join('')+'</tr>';
+  html+=`<tr><td>Δ vs hoje (${UNITLBL})</td>`+rows.map(r=>{
+    const cls=(r.delta>1?'pos':r.delta<-1?'neg':'dim');
+    return `<td class="${r.y===2027||r.y===2033?'yhl ':''}${cls}">${r.y===2025?'—':(r.delta>0?'+':r.delta<0?'−':'')+fU(Math.abs(r.delta))}</td>`;}).join('')+'</tr>';
+  html+=`<tr><td>Δ vs ano anterior (${UNITLBL})</td>`+rows.map(r=>{
+    const cls=(r.deltaPrev>1?'pos':r.deltaPrev<-1?'neg':'dim');
+    return `<td class="${r.y===2027||r.y===2033?'yhl ':''}${cls}">${r.y===2025?'—':Math.abs(r.deltaPrev)<=1?'=':(r.deltaPrev>0?'+':'−')+fU(Math.abs(r.deltaPrev))}</td>`;}).join('')+'</tr>';
+  html+='</tbody>';
+  $('matrix').innerHTML=html;
+  const notes=[];
+  notes.push('2026: fase-teste de 1% (CBS 0,9% + IBS 0,1%) compensável com PIS/COFINS — efeito líquido zero para quem apura; quem cumprir as obrigações acessórias fica dispensado do recolhimento.');
+  notes.push('2027–2028: CBS cheia (−0,1 p.p.) + IBS de 0,1%; PIS/COFINS extintos; IPI zerado (exceto ZFM); Imposto Seletivo entra.');
+  notes.push('2029–2032: ICMS e ISS a 90% / 80% / 70% / 60% das alíquotas atuais; IBS a 10% / 20% / 30% / 40% da referência. Benefícios fiscais de ICMS encolhem na mesma proporção.');
+  if(rows.some(r=>r.saldoCredor>1)) notes.push('Seu cenário gera saldo credor de CBS/IBS em alguns anos (créditos maiores que débitos) — veja a memória de cálculo; o ressarcimento tem prazos definidos na LC 214.');
+  $('matrixNotes').textContent=notes.join(' ');
+}
+function renderMemo(s,rows){
+  const rs=rows.filter(r=>r.y>=2026);
+  const head=`<thead><tr><th>Novo sistema (${UNITLBL})</th>`+rs.map(r=>`<th>${r.y}</th>`).join('')+'</tr></thead>';
+  const line=(nome,get,cls='')=>`<tr class="${cls}"><td>${nome}</td>`+rs.map(r=>{
+    const v=get(r);return `<td class="${Math.abs(v)<1?'dim':''}">${Math.abs(v)<1?'—':fU(v)}</td>`;}).join('')+'</tr>';
+  let html=head+'<tbody>';
+  html+=`<tr><td>Alíquota sobre suas vendas</td>`+rs.map(r=>`<td>${fPct(r.aliqVenda*100)}</td>`).join('')+'</tr>';
+  html+=line('Débito CBS + IBS',r=>r.debCBS+r.debIBS,'sub');
+  html+=line('(−) Créditos das compras',r=>-r.cred,'sub');
+  html+=line('Saldo credor (se houver)',r=>r.saldoCredor,'sub');
+  html+=line('CBS + IBS líquidos a recolher',r=>r.liqCBS+r.liqIBS,'grp');
+  if(s.is>0) html+=line('Imposto Seletivo',r=>r.isv,'sub');
+  html+='</tbody>';
+  $('memo').innerHTML=html;
+}
+
+/* --- DRE / margem líquida --- */
+function renderDRE(s,rows,base,dreOn){
+  $('dreCard').style.display=dreOn?'block':'none';
+  $('dreHint').style.display=dreOn?'none':'block';
+  if(!dreOn)return;
+  const R=s.fat, cx=caixaRows(s,rows);
+  const fin=y=>{const x=cx.list.find(k=>k.y===y);return x?x.custo:0;};
+  rows.forEach(r=>{r.llAdj=r.ll-fin(r.y);r.margemAdj=r.llAdj/R;});
+  const y33=rows.find(r=>r.y===2033);
+  const regTxt=s.regime==='real'
+    ?'No Lucro Real, IRPJ e CSLL acompanham o lucro: quando a carga de consumo sobe, o lucro cai e IRPJ/CSLL caem junto, amortecendo parte do impacto.'
+    :s.regime==='presumido'
+    ?'No Lucro Presumido, IRPJ e CSLL incidem sobre a base presumida do setor e não diminuem quando a carga de consumo sobe — o aperto cai inteiro na margem.'
+    :'No Simples, IRPJ e CSLL estão dentro do DAS (informe o DAS efetivo no campo “Outros”).';
+  $('dreSub').innerHTML=`Mesma operação, mesmos preços: só a tributação muda. ${regTxt}`;
+  // tabela
+  const head='<thead><tr><th>DRE simplificada ('+UNITLBL+')</th>'+rows.map(r=>`<th class="${r.y===2027||r.y===2033?'yhl':''}">${r.y===2025?'Hoje':r.y}</th>`).join('')+'</tr></thead>';
+  const line=(nome,get,cls='',neg=false)=>`<tr class="${cls}"><td>${nome}</td>`+rows.map(r=>{
+    const v=get(r);const shown=Math.abs(v)<1?'—':(neg?'(':'')+fU(Math.abs(v))+(neg?')':'');
+    return `<td class="${r.y===2027||r.y===2033?'yhl ':''}${Math.abs(v)<1?'dim':''}${!neg&&v<0?' pos':''}">${!neg&&v<0?'−'+fU(Math.abs(v)):shown}</td>`;}).join('')+'</tr>';
+  let html=head+'<tbody>';
+  html+=line('Receita bruta',()=>R,'sub');
+  html+=line('(−) Tributos sobre o consumo',r=>r.total,'sub',true);
+  html+=line('(−) Custos e despesas',()=>R*s.custos/100,'sub',true);
+  html+=line('(−) Folha com encargos',()=>R*s.folha/100,'sub',true);
+  html+=line('(=) Resultado antes de IRPJ/CSLL',r=>r.lair,'grp');
+  html+=line('(−) IRPJ + CSLL',r=>r.irpj+r.csll,'sub',true);
+  html+=line('(=) Lucro líquido',r=>r.ll,'grp');
+  html+=line('(−) Custo financeiro do giro (split payment)',r=>fin(r.y),'sub',true);
+  html+=line('(=) Lucro líquido ajustado',r=>r.llAdj,'total');
+  html+=`<tr><td>Margem líquida ajustada</td>`+rows.map(r=>`<td class="${r.y===2027||r.y===2033?'yhl':''}${r.margemAdj<0?' pos':''}">${fPct(r.margemAdj*100,1)}</td>`).join('')+'</tr>';
+  html+='</tbody>';
+  $('dreTbl').innerHTML=html;
+  const notes=['Premissas constantes: mesma receita, mesmos custos e folha em todos os anos — isola o efeito puramente tributário.'];
+  if(s.regime==='real')notes.push('IRPJ estimado sobre o resultado contábil (15% + adicional de 10% acima de R$ 240 mil/ano), sem adições e exclusões — refine com seu LALUR.');
+  if(s.regime==='presumido'){const p=PRESUNCAO[s.setor]||PRESUNCAO.mis;notes.push(`Base presumida do setor: IRPJ ${p.ir}% e CSLL ${p.cs}% da receita.`);}
+  notes.push('A aba Preço & repasse mostra quanto do aperto pode ser devolvido via preço.');
+  $('dreNotes').textContent=notes.join(' ');
+  // gráfico de linha — margem líquida ajustada
+  const svg=$('dreChart'), W=980, H=250, padL=64, padR=20, padT=24, padB=32;
+  const cw=W-padL-padR, ch=H-padT-padB;
+  const ms=rows.map(r=>r.margemAdj*100);
+  let lo=Math.min(...ms), hi=Math.max(...ms);
+  const span=Math.max(1,hi-lo); lo-=span*0.25; hi+=span*0.25;
+  const xP=i=>padL+cw*(i/(rows.length-1)), yP=v=>padT+ch-(v-lo)/(hi-lo)*ch;
+  let el='';
+  for(let i=0;i<=3;i++){const v=lo+(hi-lo)*i/3,y=yP(v);
+    el+=`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="var(--line-2)"/>`;
+    el+=`<text x="${padL-8}" y="${y+4}" text-anchor="end" font-size="10" fill="var(--ink-3)">${v.toLocaleString('pt-BR',{maximumFractionDigits:1})}%</text>`;}
+  if(lo<0&&hi>0){const y0=yP(0);el+=`<line x1="${padL}" y1="${y0}" x2="${W-padR}" y2="${y0}" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="4 4"/>`;}
+  el+=`<polyline fill="none" stroke="#0092B0" stroke-width="2.5" points="${rows.map((r,i)=>xP(i)+','+yP(r.margemAdj*100)).join(' ')}"/>`;
+  const minI=ms.indexOf(Math.min(...ms));
+  rows.forEach((r,i)=>{
+    el+=`<circle cx="${xP(i)}" cy="${yP(ms[i])}" r="4" fill="#0092B0" stroke="var(--surface)" stroke-width="2" data-i="${i}" class="dpt" style="cursor:pointer"/>`;
+    if(i===0||i===rows.length-1||i===minI||r.y===2027)
+      el+=`<text x="${xP(i)}" y="${yP(ms[i])-11}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--ink-2)">${ms[i].toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}%</text>`;
+    el+=`<text x="${xP(i)}" y="${H-10}" text-anchor="middle" font-size="11" fill="${r.y===2025?'var(--ink)':'var(--ink-3)'}" font-weight="${r.y===2025?'600':'400'}">${r.y}</text>`;
+  });
+  svg.innerHTML=el;
+  const tip=$('tip2'), wrap=svg.parentElement;
+  svg.querySelectorAll('.dpt').forEach(c=>{
+    c.addEventListener('mousemove',e=>{
+      const b=wrap.getBoundingClientRect(), r=rows[+c.dataset.i];
+      tip.innerHTML=`<b>${r.y}</b><br>Lucro líquido ajustado: ${fBig(r.llAdj)}<br>Margem: ${fPct(r.margemAdj*100,1)}`;
+      tip.style.left=(e.clientX-b.left)+'px';tip.style.top=(e.clientY-b.top-12)+'px';tip.style.opacity=1;
+    });
+    c.addEventListener('mouseleave',()=>tip.style.opacity=0);
+  });
+}
+
+/* --- preço --- */
+function precoRows(s,rows){
+  const tOldHoje=(s.piscof+s.icms+s.iss+s.ipi)/100;
+  return rows.map(r=>{
+    const f=r.f;
+    const tOldRem=(s.piscof*f.pc+(s.icms+s.iss)*f.ii+s.ipi*f.ipi)/100;
+    const aliqOut=(r.y===2026?0:r.aliqVenda)+(r.y>=2027?s.is/100:0); // 2026 compensável: sem repasse
+    const pBase=(1-tOldHoje)/(1-tOldRem);
+    const pCheio=pBase*(1+aliqOut);
+    return {y:r.y,pBase,pCheio,aliqOut,consumidor:(pCheio-1)*100,b2b:(pBase-1)*100};
+  });
+}
+function renderPreco(s,rows,base){
+  const pr=precoRows(s,rows);
+  const p33=pr.find(p=>p.y===2033), p27=pr.find(p=>p.y===2027);
+  const cD=v=>v>0.05?'var(--vermelho)':v<-0.05?'var(--verde)':'var(--ink)';
+  const fA=v=>(v>0?'+':'')+v.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
+  $('kpisPreco').innerHTML=
+    kpi('Preço cheio B2C em 2027',fA(p27.consumidor),'variação vs hoje para manter a margem',cD(p27.consumidor))+
+    kpi('Preço cheio B2C em 2033',fA(p33.consumidor),'com CBS + IBS por fora',cD(p33.consumidor))+
+    kpi('Custo líquido p/ cliente B2B em 2033',fA(p33.b2b),'cliente do regime regular recupera o crédito',cD(p33.b2b))+
+    kpi('Suas vendas B2B',fPct(s.b2b,0),'parcela onde o repasse é mais fácil');
+  const head='<thead><tr><th>Preço (hoje = 100)</th>'+pr.map(p=>`<th class="${p.y===2027||p.y===2033?'yhl':''}">${p.y===2025?'Hoje':p.y}</th>`).join('')+'</tr></thead>';
+  const line=(nome,get,dec=1,cls='')=>`<tr class="${cls}"><td>${nome}</td>`+pr.map(p=>`<td class="${p.y===2027||p.y===2033?'yhl':''}">${get(p).toLocaleString('pt-BR',{minimumFractionDigits:dec,maximumFractionDigits:dec})}</td>`).join('')+'</tr>';
+  let html=head+'<tbody>';
+  html+=line('Preço-base da nota (sem CBS/IBS)',p=>p.pBase*100,1,'sub');
+  html+=`<tr class="sub"><td>CBS/IBS/IS por fora</td>`+pr.map(p=>`<td class="${p.y===2027||p.y===2033?'yhl':''}">${p.aliqOut>0?fPct(p.aliqOut*100,1):'—'}</td>`).join('')+'</tr>';
+  html+=line('Preço cheio — consumidor final (B2C)',p=>p.pCheio*100,1,'grp');
+  html+=line('Custo líquido — cliente B2B (regime regular)',p=>p.pBase*100,1,'grp');
+  html+='</tbody>';
+  $('precoTbl').innerHTML=html;
+  // insights
+  const ins=[];
+  if(p33.b2b<-0.5) ins.push(['v',`<b>Vantagem B2B:</b> em 2033 seu produto/serviço fica ${fA(Math.abs(p33.b2b)).replace('+','')} mais barato para clientes do regime regular, mesmo sem você ceder margem — os tributos que hoje estão embutidos no preço saem, e o CBS/IBS vira crédito para o cliente. Use isso na negociação, não deixe o comprador capturar tudo.`]);
+  if(p33.consumidor>0.5) ins.push(['a',`<b>Pressão B2C:</b> para o consumidor final, manter sua margem exige preço cheio ${fA(p33.consumidor)} em 2033. Com ${(100-s.b2b).toLocaleString('pt-BR')}% das suas vendas em B2C/Simples, teste elasticidade e reposicionamento antes de 2027.`]);
+  if(p33.consumidor<=0.5&&p33.consumidor>=-0.5) ins.push(['v',`<b>Repasse quase neutro no B2C:</b> seu preço cheio ao consumidor praticamente não muda em 2033 — a troca de tributos por dentro por CBS/IBS por fora se compensa no seu caso.`]);
+  if(p33.consumidor<-0.5) ins.push(['v',`<b>Espaço competitivo:</b> seu preço cheio ao consumidor pode até cair ${fA(Math.abs(p33.consumidor)).replace('+','')} em 2033 mantendo a margem — espaço para ganhar mercado ou reforçar margem.`]);
+  ins.push(['a',`<b>Contratos longos:</b> todo contrato que atravessa 2027 precisa de cláusula de reequilíbrio tributário. Sem ela, a variação de carga de cada ano da transição corre por sua conta.`]);
+  $('precoInsights').innerHTML=ins.map(i=>`<div class="alert ${i[0]}"><span class="ic"></span><div>${i[1]}</div></div>`).join('');
+}
+
+/* --- caixa --- */
+function caixaRows(s,rows){
+  const prazoPond=(1-s.pctprazo/100)*2+(s.pctprazo/100)*s.prazodias;
+  const antecip=Math.max(0,s.floathoje-prazoPond);
+  return {prazoPond,antecip,list:rows.filter(r=>r.y>=2027).map(r=>{
+    const liqM=(r.liqCBS+r.liqIBS+r.isv)/12;
+    const degrau=liqM*antecip/30;
+    return {y:r.y,liqM,degrau,custo:degrau*s.juro/100};
+  })};
+}
+function renderCaixa(s,rows){
+  const cx=caixaRows(s,rows);
+  const d27=cx.list.find(x=>x.y===2027), d33=cx.list.find(x=>x.y===2033);
+  $('cxSub').innerHTML=`Hoje o tributo sai do caixa ~<b>${Math.round(s.floathoje)} dias</b> depois da venda. Com o split payment, sai na liquidação — em média <b>${Math.round(cx.prazoPond)} dias</b> no seu mix de prazos. `+
+    (cx.antecip>0
+      ?`Resultado: o desembolso <b>antecipa ${Math.round(cx.antecip)} dias</b> e o caixa perde o fôlego que hoje financia o giro.`
+      :`No seu mix, o recolhimento hoje já ocorre antes de receber — o split payment tende a <b>alinhar</b> o desembolso ao recebimento, sem degrau relevante de giro.`);
+  const cD=v=>v>1?'var(--vermelho)':'var(--ink)';
+  $('kpisCaixa').innerHTML=
+    kpi('Antecipação do desembolso',Math.round(cx.antecip)+' dias','vs prática atual de recolhimento',cD(cx.antecip))+
+    kpi('Degrau de giro em 2027',fBig(d27.degrau),'caixa a mais preso no ciclo',cD(d27.degrau))+
+    kpi('Degrau de giro em 2033',fBig(d33.degrau),'no regime pleno, com IBS cheio',cD(d33.degrau))+
+    kpi('Custo financeiro / ano em 2033',fBig(d33.custo),'ao juro de '+fPct(s.juro,1)+' a.a.',cD(d33.custo));
+  const head=`<thead><tr><th>Caixa sob split payment (${UNITLBL})</th>`+cx.list.map(x=>`<th class="${x.y===2027||x.y===2033?'yhl':''}">${x.y}</th>`).join('')+'</tr></thead>';
+  const line=(nome,get,cls='')=>`<tr class="${cls}"><td>${nome}</td>`+cx.list.map(x=>{
+    const v=get(x);return `<td class="${x.y===2027||x.y===2033?'yhl ':''}${Math.abs(v)<1?'dim':''}">${Math.abs(v)<1?'—':fU(v)}</td>`;}).join('')+'</tr>';
+  let html=head+'<tbody>';
+  html+=line('CBS+IBS+IS líquidos / mês',x=>x.liqM,'sub');
+  html+=line('Necessidade adicional de giro (degrau)',x=>x.degrau,'grp');
+  html+=line('Custo financeiro anual do degrau',x=>x.custo,'sub');
+  html+='</tbody>';
+  $('caixaTbl').innerHTML=html;
+}
+
+/* --- relatório --- */
+function renderRelatorio(s,rows,base,dreOn){
+  const y27=rows.find(r=>r.y===2027), y33=rows.find(r=>r.y===2033);
+  const pior=rows.slice(1).reduce((a,b)=>b.total>a.total?b:a,rows[1]);
+  const pr=precoRows(s,rows), p33=pr.find(p=>p.y===2033);
+  const cx=caixaRows(s,rows), d27=cx.list.find(x=>x.y===2027);
+  const cD=v=>v>0?'var(--vermelho)':v<0?'var(--verde)':'var(--ink)';
+  $('relEmpresa').textContent=$('razao').value.trim()||'a sua empresa';
+  $('kpisRel').innerHTML=
+    kpi('Δ carga em 2027',fSign(y27.delta),fPP(y27.deltaPP)+' vs hoje',cD(y27.delta))+
+    kpi('Δ carga em 2033',fSign(y33.delta),fPP(y33.deltaPP)+' vs hoje',cD(y33.delta))+
+    kpi('Preço B2C p/ manter margem (2033)',(p33.consumidor>0?'+':'')+p33.consumidor.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%','CBS/IBS por fora, líquido dos tributos que saem',cD(p33.consumidor))+
+    kpi('Degrau de giro em 2027',fBig(d27.degrau),Math.round(cx.antecip)+' dias de antecipação no desembolso',cD(d27.degrau));
+  const al=[];
+  if(dreOn){
+    const m25=rows[0].margem*100, m33=y33.margem*100;
+    if(y33.ll<0) al.push(['r',`<b>A transição vira prejuízo:</b> com premissas constantes, o lucro líquido de ${fBig(rows[0].ll)} hoje se torna negativo (${fBig(y33.ll)}) em 2033. Repasse de preço e revisão de cadeia deixam de ser opção e viram condição de sobrevivência.`]);
+    else if(m25-m33>0.5) al.push(['r',`<b>Margem líquida comprimida:</b> de ${fPct(m25,1)} hoje para ${fPct(m33,1)} em 2033 (${fPP(m33-m25)}) — ${fBig(rows[0].ll-y33.ll)} a menos de lucro por ano${s.regime==='presumido'?', e no Presumido o IRPJ/CSLL não caem junto':''}. Veja na aba Preço quanto precisa ser devolvido via preço.`]);
+    else if(m33-m25>0.5) al.push(['v',`<b>Margem líquida melhora:</b> de ${fPct(m25,1)} para ${fPct(m33,1)} em 2033 — a captura depende de não repassar o ganho ao preço antes da hora e de apropriar créditos correntemente.`]);
+  }
+  if(s.monost>=20) al.push(['r',`<b>${fPct(s.monost,0)} da receita hoje em monofásico/ST:</b> o PIS/COFINS monofásico acaba em 2027 e a substituição tributária do ICMS encolhe com ele até sumir em 2033 — essa receita, que hoje quase não gera débito próprio, passa a ser tributada por CBS/IBS por inteiro (com crédito para o cliente B2B). Reprecifique a cadeia com antecedência.`]);
+  if(y33.delta>0.005*s.fat) al.push(['r',`<b>Carga sobe na sua operação:</b> ${fSign(y33.delta)} por ano em 2033 (${fPP(y33.deltaPP)}). Sem plano de repasse e revisão de cadeia, isso sai da margem. O pior ano é <b>${pior.y}</b> (${fPct(pior.carga*100,1)} de carga).`]);
+  else if(y33.delta<-0.005*s.fat) al.push(['v',`<b>Carga tende a cair:</b> ${fSign(y33.delta)} por ano em 2033 (${fPP(y33.deltaPP)}). A captura desse ganho não é automática — depende de crédito bem apropriado e de segurar o repasse na negociação.`]);
+  else al.push(['a',`<b>Carga quase estável no total</b> — mas a composição muda por completo: novos tributos, novas obrigações, split payment. Neutro no ano não significa neutro no caixa nem nos contratos.`]);
+  if(s.credbase<25) al.push(['r',`<b>Base de crédito fraca (${fPct(s.credbase,0)} da receita):</b> operações intensivas em folha e pró-labore não geram crédito de CBS/IBS. Reveja a cadeia: PJ regular no lugar de informal, e o que puder migrar de custo sem nota para custo com nota.`]);
+  if(rows.some(r=>r.saldoCredor>1)) al.push(['a',`<b>Saldo credor recorrente:</b> seus créditos superam débitos em parte da transição. Dinheiro parado em crédito é caixa — estruture o ressarcimento nos prazos da LC 214 desde o primeiro dia.`]);
+  if(s.redCat>0) al.push(['a',`<b>Enquadramento com redução de ${fPct(s.redCat*100,0)}${s.pctenq<100?' em '+fPct(s.pctenq,0)+' da receita':''}:</b> confirme item a item (NCM/NBS) nos anexos da LC 214 e monitore a regulamentação — enquadramento errado é autuação ou dinheiro deixado na mesa.`]);
+  if(s.regime==='simples') al.push(['a',`<b>Simples Nacional:</b> avalie o regime híbrido (IBS/CBS “por fora” do DAS) se os seus clientes forem B2B do regime regular — sem isso, seu cliente perde crédito e seu preço fica artificialmente caro na comparação.`]);
+  if(cx.antecip>10&&d27.degrau>0.002*s.fat) al.push(['r',`<b>Split payment pega o seu mix de prazos:</b> desembolso do tributo antecipa ~${Math.round(cx.antecip)} dias. Reserve linha de giro ou reprecifique prazos antes de 2027.`]);
+  if(s.b2b<40&&p33.consumidor>1) al.push(['a',`<b>Maioria das vendas em B2C:</b> o repasse ao consumidor final é o mais difícil. Trabalhe elasticidade, mix e posicionamento em 2026, não em 2027.`]);
+  if(s.is>0) al.push(['r',`<b>Imposto Seletivo (${fPct(s.is,1)}):</b> incide por fora e não gera crédito para o seu cliente — é custo seco na cadeia. Cheque a regulamentação do seu produto.`]);
+  al.push(['a',`<b>ERP e obrigações acessórias:</b> desde 2026 a nota fiscal ganha campos de CBS/IBS e o cumprimento das obrigações dispensa o recolhimento do 1% teste. Sistema desatualizado em 2026 = problema em 2027.`]);
+  $('alerts').innerHTML=al.map(i=>`<div class="alert ${i[0]}"><span class="ic"></span><div>${i[1]}</div></div>`).join('');
+  const ag=[
+    ['2026','Fase-teste: CBS 0,9% + IBS 0,1% compensáveis. Adequar ERP e documentos fiscais, mapear enquadramentos (NCM/NBS), simular com dados reais, renegociar contratos longos com cláusula de reequilíbrio.'],
+    ['2027','A virada: PIS/COFINS extintos, CBS cheia, IPI zerado (exceto ZFM), Imposto Seletivo entra, split payment começa a operar. Reprecificação e linha de giro têm de estar prontas em 2026.'],
+    ['2028','Consolidação da CBS. Medir carga real vs simulada, ajustar preços e cadeia, estruturar rotina de ressarcimento de créditos.'],
+    ['2029–2032','Transição do ICMS/ISS para o IBS em degraus de 10 p.p. ao ano. Benefícios estaduais encolhem na mesma proporção — quem depende de incentivo precisa de plano B; guerra fiscal perde objeto, logística e localização podem ser revistas.'],
+    ['2033','Regime pleno: só CBS, IBS e IS. Preço, contratos, cadeia e sistemas 100% no novo mundo.']
+  ];
+  $('agenda').innerHTML=ag.map(a=>`<div class="ti"><div class="ty">${a[0]}</div><div class="td">${a[1]}</div></div>`).join('');
+}
+
+/* ===== GATE / LEAD (mesmo endpoint do Termômetro) ===== */
+let captured=false, reportReadyFired=false;
+function updateGate(){
+  const rep=$('report'), gate=$('gate');
+  if(captured){rep.classList.remove('blurred');gate.classList.add('hidden');return;}
+  rep.classList.add('blurred');gate.classList.remove('hidden');
+  if(!reportReadyFired){reportReadyFired=true;track('report_ready',{});}
+}
+function openGate(){$('emailModal').classList.add('on');setTimeout(()=>$('leadEmail').focus(),60);}
+function closeModal(){$('emailModal').classList.remove('on');}
+function submitLead(){
+  const v=$('leadEmail').value.trim();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){$('merr').textContent='Informe um e-mail válido.';return;}
+  $('merr').textContent='';captured=true;
+  captureLead(v);closeModal();updateGate();
+}
+function captureLead(email){
+  track('lead_captured',{});
+  if(!CONFIG.captureEndpoint)return;
+  const {s,rows,dreOn}=calc();
+  const y27=rows.find(r=>r.y===2027),y30=rows.find(r=>r.y===2030),y33=rows.find(r=>r.y===2033);
+  const trans=rows.filter(r=>r.y>=2026);
+  const aq=(()=>{const p=new URLSearchParams(location.search);const ua=navigator.userAgent||'';
+    return {referrer:document.referrer||'',utm_source:p.get('utm_source')||'',utm_medium:p.get('utm_medium')||'',
+      utm_campaign:p.get('utm_campaign')||'',utm_term:p.get('utm_term')||'',utm_content:p.get('utm_content')||'',
+      landing_url:location.href,device:/Mobi|Android|iPhone|iPad/i.test(ua)?'mobile':'desktop',user_agent:ua};})();
+  const payload={email,...aq,empresa:$('razao').value,faturamento:s.fat,regime:s.regime,setor:s.setor,
+    premissas:{piscof:s.piscof,icms:s.icms,iss:s.iss,ipi:s.ipi,outros:s.outros,monost:s.monost,
+      custos:s.custos,folha:s.folha,credbase:s.credbase,
+      reducao:s.redCat*100,pct_enquadramento:s.pctenq,is:s.is,refcbs:s.refcbs,refibs:s.refibs,b2b:s.b2b,
+      pctprazo:s.pctprazo,prazodias:s.prazodias,floathoje:s.floathoje,juro:s.juro},
+    resultados:{carga_hoje:+(rows[0].carga*100).toFixed(2),
+      carga_2027:+(y27.carga*100).toFixed(2),delta_2027:Math.round(y27.delta),
+      carga_2030:+(y30.carga*100).toFixed(2),
+      carga_2033:+(y33.carga*100).toFixed(2),delta_2033:Math.round(y33.delta),
+      carga_media_transicao:+((trans.reduce((a,r)=>a+r.carga,0)/trans.length)*100).toFixed(2),
+      efeito_acumulado:Math.round(trans.reduce((a,r)=>a+r.delta,0)),
+      margem_hoje:dreOn?+(rows[0].margem*100).toFixed(2):null,
+      margem_2033:dreOn?+(y33.margem*100).toFixed(2):null,
+      lucro_2033:dreOn?Math.round(y33.ll):null},
+    origem:'planilha-transicao',data:new Date().toLocaleDateString('pt-BR'),ts:new Date().toISOString()};
+  const headers={'Content-Type':'application/json'};
+  if(CONFIG.supabaseAnonKey){headers['Authorization']='Bearer '+CONFIG.supabaseAnonKey;headers['apikey']=CONFIG.supabaseAnonKey;}
+  fetch(CONFIG.captureEndpoint,{method:'POST',headers,body:JSON.stringify(payload)}).catch(()=>{});
+}
+function bookCall(){
+  track('book_click',{});
+  if(CONFIG.bookingsUrl)window.open(CONFIG.bookingsUrl,'_blank','noopener');
+}
+
+/* ===== EXPORT / PERSISTÊNCIA ===== */
+function exportCSV(){
+  const {s,rows,dreOn}=calc();
+  if(!ready(s))return;
+  const sep=';', dec=v=>String(Math.round(v)).replace('.',',');
+  const lines=[['Tributo (R$/ano)',...rows.map(r=>r.y)].join(sep)];
+  const push=(n,g)=>lines.push([n,...rows.map(r=>dec(g(r)))].join(sep));
+  push('PIS/COFINS',r=>r.pisc);push('IPI',r=>r.ipi);push('ICMS',r=>r.icms);push('ISS',r=>r.iss);
+  if(s.outros>0)push('Outros',r=>r.outros);
+  push('Subtotal sistema atual',r=>r.atual+r.outros);
+  push('Debito CBS+IBS',r=>r.debCBS+r.debIBS);push('Creditos',r=>-r.cred);push('Saldo credor',r=>r.saldoCredor);
+  push('CBS liquida',r=>r.liqCBS);push('IBS liquido',r=>r.liqIBS);
+  if(s.is>0)push('Imposto Seletivo',r=>r.isv);
+  push('Subtotal novo sistema',r=>r.novo);push('CARGA TOTAL',r=>r.total);
+  lines.push(['Carga % receita',...rows.map(r=>(r.carga*100).toFixed(2).replace('.',','))].join(sep));
+  lines.push(['Delta vs hoje',...rows.map(r=>dec(r.delta))].join(sep));
+  lines.push(['Delta vs ano anterior',...rows.map(r=>dec(r.deltaPrev))].join(sep));
+  if(dreOn){
+    push('Resultado antes IRPJ/CSLL',r=>r.lair);
+    push('IRPJ + CSLL',r=>r.irpj+r.csll);
+    push('Lucro liquido',r=>r.ll);
+    lines.push(['Margem liquida %',...rows.map(r=>(r.margem*100).toFixed(2).replace('.',','))].join(sep));
+  }
+  const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='planilha-transicao-reforma.csv';a.click();URL.revokeObjectURL(a.href);
+  track('export_csv',{});
+}
+const LSKEY='planilha-transicao-cenario';
+const FIELDS=['razao','fat','regime','setor','b2b','piscof','icms','iss','ipi','outros','monost','custos','folha','credbase','cat','catCustom','pctenq','is','refcbs','refibs','pctprazo','prazodias','floathoje','juro'];
+function saveScenario(){
+  const o={};FIELDS.forEach(k=>o[k]=$(k).value);
+  try{localStorage.setItem(LSKEY,JSON.stringify(o));alert('Cenário salvo neste navegador.');}catch(e){}
+  track('save',{});
+}
+function loadScenario(manual){
+  try{
+    const o=JSON.parse(localStorage.getItem(LSKEY)||'null');
+    if(!o){if(manual)alert('Nenhum cenário salvo neste navegador.');return;}
+    FIELDS.forEach(k=>{if(o[k]!==undefined)$(k).value=o[k];});
+    catChange();regimeAlert();clearScen();recalc();
+  }catch(e){}
+}
+function resetAll(){
+  FIELDS.forEach(k=>{const e=$(k);if(e.tagName==='SELECT')e.selectedIndex=0;else e.value='';});
+  $('b2b').value=50;$('is').value=0;$('catCustom').value=0;$('pctenq').value=100;
+  $('refcbs').value=8.8;$('refibs').value=17.7;
+  $('pctprazo').value=60;$('prazodias').value=45;$('floathoje').value=40;$('juro').value=14;
+  document.querySelectorAll('#scen button').forEach((b,i)=>b.classList.toggle('on',i===0));
+  captured=false;reportReadyFired=false;
+  catChange();regimeAlert();recalc();showTab('premissas');
+  try{localStorage.removeItem(LSKEY);}catch(e){}
+}
+
+/* ===== INIT ===== */
+catChange();regimeAlert();loadScenario(false);recalc();
+</script>
+</body>
+</html>
