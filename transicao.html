@@ -217,7 +217,10 @@
       <h2>Empresa e receita</h2>
       <p class="sub">O ponto de partida é o seu DRE de 2025: faturamento e o perfil de quem compra de você.</p>
       <div class="grid g3">
-        <div class="f" style="grid-column:span 2"><label>Razão social</label>
+        <div class="f"><label>CNPJ da empresa analisada</label>
+          <input type="text" id="cnpj" inputmode="numeric" placeholder="00.000.000/0000-00" oninput="maskCNPJ(this)" onblur="cnpjAutofill()">
+          <div class="hint" id="cnpjHint">Informe e preenchemos razão social e setor com os dados públicos da Receita.</div></div>
+        <div class="f"><label>Razão social</label>
           <input type="text" id="razao" placeholder="Razão social da empresa" oninput="recalc()"></div>
         <div class="f"><label>Faturamento anual (R$)</label>
           <input type="text" id="fat" inputmode="numeric" placeholder="Ex.: 40.000.000" oninput="maskMoney(this);recalc()">
@@ -495,11 +498,12 @@
     <p class="lsub">A Planilha da Transição é liberada pelo <b>Termômetro da Reforma</b> — quem decide a estratégia mede a exposição em 15 minutos e recebe o convite para a equipe técnica.</p>
     <a class="btn btn-primary" href="./?utm_source=planilha&utm_medium=gate">Começar pelo Termômetro (15 min)</a>
     <div class="lockdiv">ou</div>
-    <p class="lsub" style="margin-bottom:10px">Contador ou consultor? Libere com o seu e-mail profissional.</p>
-    <input type="email" id="proEmail" placeholder="voce@suaempresa.com.br" autocomplete="email" onkeydown="if(event.key==='Enter')submitProEmail()">
+    <p class="lsub" style="margin-bottom:10px">Contador ou consultor? Libere com o seu e-mail profissional e o CNPJ da empresa analisada.</p>
+    <input type="email" id="proEmail" placeholder="voce@seuescritorio.com.br" autocomplete="email" onkeydown="if(event.key==='Enter')submitProEmail()">
+    <input type="text" id="proCnpj" inputmode="numeric" placeholder="CNPJ da empresa analisada" style="margin-top:8px" oninput="maskCNPJ(this)" onkeydown="if(event.key==='Enter')submitProEmail()">
     <div class="merr" id="proErr"></div>
-    <button class="btn btn-primary" style="background:var(--verde)" onclick="submitProEmail()">Liberar com e-mail profissional</button>
-    <div class="lockfine">Aceitamos apenas e-mail corporativo (domínio da sua empresa ou escritório). Suas premissas ficam salvas neste navegador.</div>
+    <button class="btn btn-primary" id="proBtn" style="background:var(--verde)" onclick="submitProEmail()">Liberar acesso</button>
+    <div class="lockfine">E-mail corporativo (domínio da empresa ou do escritório) e CNPJ ativo na Receita. Consultamos apenas dados públicos; suas premissas ficam salvas neste navegador.</div>
   </div>
 </div>
 
@@ -657,6 +661,12 @@ function initAccess(){
     if(p.get('convite')){localStorage.setItem(LOCKKEY,'convite:'+p.get('convite'));track('acesso_convite',{});}
     const st=localStorage.getItem(LOCKKEY);
     if(st){unlocked=true; if(st.startsWith('email:'))captured=true;}
+    // convite pode trazer o CNPJ da empresa do decisor: pré-preenche e consulta
+    const pc=cnpjDigits(p.get('cnpj')||'');
+    if(pc.length===14&&validCNPJ(pc)){
+      $('cnpj').value=pc.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,'$1.$2.$3/$4-$5');
+      setTimeout(cnpjAutofill,50);
+    }
   }catch(e){}
 }
 const BODIES={transicao:'tr-body',preco:'pr-body',caixa:'cx-body',relatorio:'re-body'};
@@ -672,6 +682,61 @@ function applyLock(){
   cur.appendChild(gate);
   gate.style.display='flex';
 }
+/* ===== CNPJ: máscara, dígitos verificadores e consulta pública (BrasilAPI/Receita) ===== */
+const CNPJ_STATE={cnpj:'',verificado:false,receita:null};
+const cnpjDigits=v=>String(v||'').replace(/\D/g,'').slice(0,14);
+function maskCNPJ(el){
+  const d=cnpjDigits(el.value);
+  el.value=d.replace(/^(\d{2})(\d)/,'$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3')
+           .replace(/\.(\d{3})(\d)/,'.$1/$2').replace(/(\d{4})(\d{1,2})$/,'$1-$2');
+}
+function validCNPJ(v){
+  const c=cnpjDigits(v);
+  if(c.length!==14||/^(\d)\1{13}$/.test(c))return false;
+  const dv=b=>{let w=b.length-7,s=0;for(let i=0;i<b.length;i++){s+=b[i]*w--;if(w<2)w=9;}const r=s%11;return r<2?0:11-r;};
+  const b=c.slice(0,12).split('').map(Number), d1=dv(b), d2=dv(b.concat(d1));
+  return d1===+c[12]&&d2===+c[13];
+}
+async function lookupCNPJ(cnpj){
+  try{
+    const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),6000);
+    const r=await fetch('https://brasilapi.com.br/api/cnpj/v1/'+cnpj,{signal:ctl.signal});
+    clearTimeout(t);
+    if(r.status===404)return {found:false,down:false};
+    if(!r.ok)return {found:false,down:true};
+    const j=await r.json();
+    return {found:true,down:false,data:{
+      razao:j.razao_social||'',fantasia:j.nome_fantasia||'',
+      situacao:String(j.descricao_situacao_cadastral||'').toUpperCase(),
+      cnae:j.cnae_fiscal||'',cnae_desc:j.cnae_fiscal_descricao||'',
+      porte:j.porte||'',uf:j.uf||'',municipio:j.municipio||''}};
+  }catch(e){return {found:false,down:true};}
+}
+function setorFromCNAE(cnae){
+  const d=parseInt(String(cnae).slice(0,2),10);
+  if(isNaN(d))return null;
+  if(d>=45&&d<=47)return 'com';
+  if(d<=43)return 'ind';
+  return 'ser';
+}
+function applyReceita(cnpj,data,verificado){
+  CNPJ_STATE.cnpj=cnpj;CNPJ_STATE.verificado=verificado;CNPJ_STATE.receita=data||null;
+  if(!data)return;
+  if(data.razao&&!$('razao').value.trim())$('razao').value=data.razao;
+  const s=setorFromCNAE(data.cnae); if(s)$('setor').value=s;
+  $('cnpjHint').textContent=data.razao?data.razao+' · '+(data.municipio||'')+(data.uf?'/'+data.uf:'')+' · situação '+(data.situacao||'—'):'Dados carregados.';
+  recalc();
+}
+async function cnpjAutofill(){
+  const c=cnpjDigits($('cnpj').value);
+  if(c.length!==14)return;
+  if(!validCNPJ(c)){$('cnpjHint').textContent='CNPJ inválido — confira os dígitos.';return;}
+  $('cnpjHint').textContent='Consultando a Receita…';
+  const r=await lookupCNPJ(c);
+  if(r.found)applyReceita(c,r.data,true);
+  else{$('cnpjHint').textContent=r.down?'Receita indisponível agora — seguimos sem o preenchimento automático.':'CNPJ não encontrado na Receita — confira o número.';
+    CNPJ_STATE.cnpj=c;CNPJ_STATE.verificado=false;CNPJ_STATE.receita=null;}
+}
 const FREEMAIL=['gmail.com','googlemail.com','hotmail.com','hotmail.com.br','outlook.com','outlook.com.br','live.com','msn.com','yahoo.com','yahoo.com.br','ymail.com','icloud.com','me.com','mac.com','aol.com','bol.com.br','uol.com.br','terra.com.br','ig.com.br','r7.com','globo.com','globomail.com','oi.com.br','zipmail.com.br','proton.me','protonmail.com','tutanota.com','mail.com','gmx.com','gmx.net','email.com'];
 function isProfessionalEmail(v){
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))return {ok:false,msg:'Informe um e-mail válido.'};
@@ -679,14 +744,26 @@ function isProfessionalEmail(v){
   if(FREEMAIL.includes(dom))return {ok:false,msg:'Use o seu e-mail profissional (domínio da empresa ou do escritório).'};
   return {ok:true};
 }
-function submitProEmail(){
+async function submitProEmail(){
   const v=$('proEmail').value.trim(), r=isProfessionalEmail(v);
-  if(!r.ok){$('proErr').textContent=r.msg;return;}
-  $('proErr').textContent='';
+  const err=m=>{$('proErr').textContent=m;};
+  if(!r.ok){err(r.msg);return;}
+  const c=cnpjDigits($('proCnpj').value);
+  if(!validCNPJ(c)){err('Informe o CNPJ válido da empresa analisada.');return;}
+  err('');
+  const btn=$('proBtn'), t0=btn.textContent;
+  btn.textContent='Consultando a Receita…';btn.disabled=true;
+  const q=await lookupCNPJ(c);
+  btn.textContent=t0;btn.disabled=false;
+  if(!q.found&&!q.down){err('CNPJ não encontrado na Receita — confira o número.');return;}
+  if(q.found&&q.data.situacao&&q.data.situacao!=='ATIVA'){err('Este CNPJ consta como '+q.data.situacao+' na Receita — informe o CNPJ ativo da empresa analisada.');return;}
+  // API indisponível: não seguramos o acesso — libera com flag de não verificado
+  applyReceita(c,q.found?q.data:null,q.found);
+  if($('cnpj'))$('cnpj').value=c.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,'$1.$2.$3/$4-$5');
   try{localStorage.setItem(LOCKKEY,'email:'+v);}catch(e){}
   unlocked=true;captured=true;
   captureLead(v,'planilha-acesso-direto');
-  track('acesso_email_pro',{});
+  track('acesso_email_pro',{cnpj_verificado:q.found});
   applyLock();updateGate();
 }
 function setScen(btn){
@@ -1108,7 +1185,10 @@ function captureLead(email,origemOverride){
     return {referrer:document.referrer||'',utm_source:p.get('utm_source')||'',utm_medium:p.get('utm_medium')||'',
       utm_campaign:p.get('utm_campaign')||'',utm_term:p.get('utm_term')||'',utm_content:p.get('utm_content')||'',
       landing_url:location.href,device:/Mobi|Android|iPhone|iPad/i.test(ua)?'mobile':'desktop',user_agent:ua};})();
-  const payload={email,...aq,empresa:$('razao').value,faturamento:s.fat,regime:s.regime,setor:s.setor,
+  const payload={email,...aq,empresa:$('razao').value,
+    cnpj:CNPJ_STATE.cnpj||cnpjDigits($('cnpj').value),
+    cnpj_verificado:CNPJ_STATE.verificado,receita:CNPJ_STATE.receita,
+    faturamento:s.fat,regime:s.regime,setor:s.setor,
     premissas:{piscof:s.piscof,icms:s.icms,iss:s.iss,ipi:s.ipi,outros:s.outros,monost:s.monost,
       custos:s.custos,folha:s.folha,credbase:s.credbase,
       reducao:s.redCat*100,pct_enquadramento:s.pctenq,is:s.is,refcbs:s.refcbs,refibs:s.refibs,b2b:s.b2b,
@@ -1168,7 +1248,7 @@ function exportCSV(){
   track('export_csv',{});
 }
 const LSKEY='planilha-transicao-cenario';
-const FIELDS=['razao','fat','regime','setor','b2b','piscof','icms','iss','ipi','outros','monost','custos','folha','credbase','cat','catCustom','pctenq','is','refcbs','refibs','pctprazo','prazodias','floathoje','juro'];
+const FIELDS=['cnpj','razao','fat','regime','setor','b2b','piscof','icms','iss','ipi','outros','monost','custos','folha','credbase','cat','catCustom','pctenq','is','refcbs','refibs','pctprazo','prazodias','floathoje','juro'];
 function saveScenario(){
   const o={};FIELDS.forEach(k=>o[k]=$(k).value);
   try{localStorage.setItem(LSKEY,JSON.stringify(o));alert('Cenário salvo neste navegador.');}catch(e){}
