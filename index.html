@@ -123,10 +123,6 @@
   .btn-primary{background:var(--teal);color:#fff}
   .btn-ghost{background:transparent;color:var(--teal);border:1px solid var(--panel-line);margin-top:8px}
   .disc{font-size:10px;color:var(--ink-3);margin-top:12px;font-style:italic;line-height:1.4}
-  .handoff{font-size:12px;color:var(--ink-2);margin-top:12px;text-align:center;line-height:1.55}
-  .handoff a{color:var(--teal)}
-  .copybtn{background:none;border:none;color:var(--teal);text-decoration:underline;cursor:pointer;
-    font-size:12px;font-family:var(--body);padding:0}
   .footrow{display:flex;gap:10px;margin-top:18px}
   .footrow .btn{margin-top:0}
   .btn-new{background:transparent;color:var(--ink-2);border:1px solid var(--line);font-size:12.5px;padding:9px}
@@ -293,7 +289,6 @@
               <button class="btn btn-primary" onclick="bookCall()">Agendar conversa com o nosso especialista</button>
               <div class="rc-fine">30 minutos, sem compromisso.</div>
               <button class="btn btn-ghost" onclick="window.print()">Baixar resumo</button>
-              <div class="handoff">Próximo passo técnico: seu contador valida estes números, ano a ano, na <a href="transicao.html?convite=termometro&utm_source=termometro&utm_medium=handoff">Planilha da Transição</a> · <button class="copybtn" onclick="copyPlanilha(this)">copiar link-convite para enviar</button></div>
             </div>
             <div class="disc">Estimativa direcional de triagem, com base na LC 214/2025. A conversa precifica com exatidão e monta o plano.</div>
           </div>
@@ -361,7 +356,6 @@
     <div class="rc-fc"><div class="fcl">Efeito no caixa livre em 2027</div><div class="rc-fcv" id="rcFc">—</div></div>
     <div class="rc-ctah" id="rcCtah"></div>
     <button class="btn btn-primary rc-book" onclick="bookCall()">Agendar conversa com o nosso especialista</button>
-    <div class="handoff">Encaminhe ao seu contador: a <a href="transicao.html?convite=termometro&utm_source=termometro&utm_medium=handoff">Planilha da Transição</a> valida estes números, tributo a tributo, até 2033 · <button class="copybtn" onclick="copyPlanilha(this)">copiar link-convite para enviar</button></div>
   </div>
 </div>
 
@@ -690,16 +684,6 @@ async function cnpjAutofill(){
     hint.textContent=r.down?'Receita indisponível agora — seguimos sem o preenchimento automático.':'CNPJ não encontrado na Receita — confira o número.';
   }
 }
-function updateHandoffLinks(){
-  const c=CNPJ_STATE.cnpj||cnpjDigits(document.getElementById('cnpj').value);
-  if(!validCNPJ(c))return;
-  document.querySelectorAll('.handoff a').forEach(a=>{
-    const href=a.getAttribute('href'), base=href.split('?')[0];
-    const q=new URLSearchParams(href.split('?')[1]||'');
-    q.set('cnpj',c);
-    a.setAttribute('href',base+'?'+q.toString());
-  });
-}
 function openGate(){
   const m=document.getElementById('emailModal');m.classList.add('on');
   const lc=document.getElementById('leadCnpj'), ctx=document.getElementById('cnpj').value;
@@ -716,7 +700,7 @@ function submitLead(){
   err.textContent='';leadEmail=v;captured=true;
   document.getElementById('cnpj').value=document.getElementById('leadCnpj').value;
   closeModal();recalc();
-  renderBigReport();openReport();updateHandoffLinks();
+  renderBigReport();openReport();
   // consulta best-effort: enriquece o lead sem travar a experiência
   (async()=>{
     if(CNPJ_STATE.cnpj!==c||!CNPJ_STATE.verificado){
@@ -759,15 +743,6 @@ function bookCall(){
   track('book_click',{});
   if(CONFIG.bookingsUrl) window.open(CONFIG.bookingsUrl,'_blank','noopener');
   else alert('Configure CONFIG.bookingsUrl com a URL do Zoho Bookings.');
-}
-function copyPlanilha(btn){
-  const c=CNPJ_STATE.cnpj||cnpjDigits(document.getElementById('cnpj').value);
-  const url='https://termometro.eqvalor.com.br/transicao.html?convite=termometro&utm_source=termometro&utm_medium=indicacao'
-    +(validCNPJ(c)?'&cnpj='+c:'');
-  const done=()=>{const t=btn.textContent;btn.textContent='link copiado ✓';setTimeout(()=>btn.textContent=t,2500);};
-  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(done).catch(()=>prompt('Copie o link:',url));
-  else prompt('Copie o link:',url);
-  track('handoff_planilha',{});
 }
 function val(id){const e=document.getElementById(id);return e?e.value:'';}
 function captureLead(email){
