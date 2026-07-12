@@ -64,6 +64,11 @@
   .lockcard input:focus{outline:2px solid var(--teal);outline-offset:1px}
   .lockcard .merr{min-height:17px}
   .lockfine{font-size:11px;color:var(--ink-3);margin-top:10px;line-height:1.45}
+  .exbanner{background:#FBF6EA;border:1px solid #E7D9B8;border-radius:10px;padding:11px 15px;margin-bottom:16px;
+    font-size:13px;color:var(--ink-2);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .exbanner b{color:var(--ink)}
+  .exbanner button{background:none;border:none;color:var(--teal);text-decoration:underline;cursor:pointer;
+    font-size:13px;font-weight:600;font-family:var(--body);padding:0;white-space:nowrap}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px}
   .card h2{font-family:var(--disp);font-size:21px;font-weight:600;margin-bottom:4px;letter-spacing:-.01em}
   .card .sub{font-size:13.5px;color:var(--ink-2);margin-bottom:16px;max-width:720px}
@@ -489,6 +494,12 @@
   </div>
 </div>
 
+<!-- banner do modo exemplo (movido via JS para a aba ativa) -->
+<div class="exbanner" id="exBanner" style="display:none">
+  <span>Você está explorando um <b>exemplo com dados fictícios</b> — navegue por todas as abas e veja o relatório completo.</span>
+  <button onclick="showTab('premissas')">Simular com os dados da minha empresa →</button>
+</div>
+
 <!-- cartão de acesso aos resultados (movido via JS para a aba ativa) -->
 <div class="lockgate" id="accessGate" style="display:none">
   <div class="lockcard">
@@ -655,6 +666,15 @@ function showTab(sec){
 /* ===== TRANCA DE ACESSO: premissas abertas, resultados por convite ou e-mail profissional ===== */
 const LOCKKEY='planilha-acesso';
 let unlocked=false;
+/* modo exemplo: dados fictícios liberam tudo; qualquer edição real reativa a tranca */
+let exampleMode=false, EXAMPLE_SNAP=null;
+const snapFields=()=>{const o={};FIELDS.forEach(k=>o[k]=$(k).value);return o;};
+function checkExampleIntegrity(){
+  if(!exampleMode||!EXAMPLE_SNAP)return;
+  for(const k of FIELDS){
+    if($(k).value!==EXAMPLE_SNAP[k]){exampleMode=false;EXAMPLE_SNAP=null;track('exemplo_editado',{});break;}
+  }
+}
 function initAccess(){
   try{
     const p=new URLSearchParams(location.search);
@@ -671,13 +691,21 @@ function initAccess(){
 }
 const BODIES={transicao:'tr-body',preco:'pr-body',caixa:'cx-body',relatorio:'re-body'};
 function applyLock(){
-  const gate=$('accessGate');
+  const gate=$('accessGate'), banner=$('exBanner');
   Object.values(BODIES).forEach(id=>$(id).classList.remove('lockblur'));
+  banner.style.display='none';
   const cur=document.querySelector('.sec.on');
   const sec=cur?cur.id.replace('sec-',''):'premissas';
-  if(unlocked||sec==='premissas'||!BODIES[sec]){gate.style.display='none';return;}
+  if(sec==='premissas'||!BODIES[sec]){gate.style.display='none';return;}
   const body=$(BODIES[sec]);
   if(body.style.display==='none'){gate.style.display='none';return;} // sem premissas: vale o estado vazio
+  if(exampleMode&&!unlocked){ // demo aberta, com aviso de dados fictícios
+    gate.style.display='none';
+    cur.insertBefore(banner,cur.firstChild);
+    banner.style.display='flex';
+    return;
+  }
+  if(unlocked){gate.style.display='none';return;}
   body.classList.add('lockblur');
   cur.appendChild(gate);
   gate.style.display='flex';
@@ -809,13 +837,16 @@ function loadExample(){
   $('refcbs').value=8.8; $('refibs').value=17.7;
   document.querySelectorAll('#scen button').forEach((b,i)=>b.classList.toggle('on',i===0));
   $('pctprazo').value=60; $('prazodias').value=45; $('floathoje').value=40; $('juro').value=14;
-  regimeAlert(); recalc(); showTab('transicao');
+  regimeAlert();
+  exampleMode=true; EXAMPLE_SNAP=snapFields(); // demo liberada; qualquer edição reativa a tranca
+  recalc(); showTab('transicao');
   track('exemplo',{});
 }
 
 /* ===== RENDER ===== */
 function ready(s){return s.fat>0 && (s.piscof+s.icms+s.iss+s.ipi+s.outros)>0;}
 function recalc(){
+  checkExampleIntegrity();
   const {s,rows,base,dreOn}=calc();
   setUnit(s.fat);
   $('cargaAtualTot').textContent=(s.piscof+s.icms+s.iss+s.ipi+s.outros)
@@ -1163,7 +1194,7 @@ function renderRelatorio(s,rows,base,dreOn){
 let captured=false, reportReadyFired=false;
 function updateGate(){
   const rep=$('report'), gate=$('gate');
-  if(captured){rep.classList.remove('blurred');gate.classList.add('hidden');return;}
+  if(captured||exampleMode){rep.classList.remove('blurred');gate.classList.add('hidden');return;}
   rep.classList.add('blurred');gate.classList.remove('hidden');
   if(!reportReadyFired){reportReadyFired=true;track('report_ready',{});}
 }
@@ -1268,7 +1299,7 @@ function resetAll(){
   $('refcbs').value=8.8;$('refibs').value=17.7;
   $('pctprazo').value=60;$('prazodias').value=45;$('floathoje').value=40;$('juro').value=14;
   document.querySelectorAll('#scen button').forEach((b,i)=>b.classList.toggle('on',i===0));
-  captured=false;reportReadyFired=false;
+  captured=false;reportReadyFired=false;exampleMode=false;EXAMPLE_SNAP=null;
   catChange();regimeAlert();recalc();showTab('premissas');
   try{localStorage.removeItem(LSKEY);}catch(e){}
 }
